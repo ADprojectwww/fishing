@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Рибалка</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <section class="topbar" aria-label="Статус гравця">
+      <div class="player-block">
+        <span class="badge">Рівень <strong id="levelValue">1</strong></span>
+        <div class="xp-wrap" aria-label="Досвід">
+          <div id="xpFill" class="xp-fill"></div>
+          <span id="xpText">0 / 100 XP</span>
+        </div>
+      </div>
+      <div class="resource-row">
+        <span class="stat"><span aria-hidden="true">●</span> <strong id="coinValue">75</strong> монет</span>
+        <span class="stat" id="weatherValue">Сонячно</span>
+        <span class="stat" id="timeValue">☀ День</span>
+        <span class="stat">Глибина: <strong id="depthValue">Мілко</strong></span>
+      </div>
+      <div class="quick-actions">
+        <button id="questsButton" class="icon-button" title="Квести" aria-label="Квести">!</button>
+        <button id="mapButton" class="icon-button" title="Локації" aria-label="Локації">⌂</button>
+        <button id="trophyButton" class="icon-button" title="Трофеї" aria-label="Трофеї">★</button>
+        <button id="aquariumButton" class="icon-button" title="Акваріум" aria-label="Акваріум">≈</button>
+        <button id="craftButton" class="icon-button" title="Крафт" aria-label="Крафт">⚒</button>
+        <button id="achievementsButton" class="icon-button" title="Досягнення" aria-label="Досягнення">✓</button>
+        <button id="inventoryButton" class="icon-button" title="Інвентар (E)" aria-label="Інвентар">🎒</button>
+        <button id="dexButton" class="icon-button" title="Fish Dex (I)" aria-label="Fish Dex">📖</button>
+        <button id="saveButton" class="icon-button" title="Зберегти" aria-label="Зберегти">💾</button>
+      </div>
+    </section>
+
+    <section class="scene-wrap">
+      <canvas id="gameCanvas" width="1280" height="720" aria-label="Озеро для риболовлі"></canvas>
+      <div id="hint" class="hint">Клікни або тапни по озеру, щоб закинути вудку</div>
+      <div id="bitePrompt" class="bite-prompt hidden">!</div>
+      <div id="reelPanel" class="reel-panel hidden">
+        <span>Натяг лінії</span>
+        <div class="tension-track">
+          <div class="danger left"></div>
+          <div class="safe"></div>
+          <div class="danger right"></div>
+          <div id="tensionNeedle" class="tension-needle"></div>
+        </div>
+        <small>Утримуй пробіл або кнопку, тримай шкалу в зеленій зоні</small>
+        <button id="holdReelButton">Тягнути</button>
+      </div>
+      <div class="buildings">
+        <button id="shopButton" class="building shop">Магазин</button>
+        <button id="enchantButton" class="building enchant">Чари</button>
+        <button id="sleepButton" class="building sleep">Сон</button>
+      </div>
+    </section>
+
+    <section class="control-dock" aria-label="Панель керування">
+      <div class="bait-panel">
+        <span>Наживка</span>
+        <div id="baitChoices" class="bait-choices"></div>
+      </div>
+      <div class="mobile-controls">
+        <button id="castButton">Закинути</button>
+        <button id="depthButton">Глибше</button>
+      </div>
+      <div id="messageLog" class="message-log" aria-live="polite">Ласкаво просимо на озеро.</div>
+    </section>
+  </main>
+  <div id="toastLayer" class="toast-layer" aria-live="polite"></div>
+
+  <dialog id="inventoryModal" class="modal">
+    <div class="modal-head">
+      <h2>Інвентар</h2>
+      <button data-close="inventoryModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div class="modal-tools">
+      <label>Сортувати
+        <select id="inventorySort">
+          <option value="newest">нові спочатку</option>
+          <option value="weight">за вагою</option>
+          <option value="rarity">за рідкістю</option>
+          <option value="type">за видом</option>
+        </select>
+      </label>
+      <button id="sellAllButton">Продати все</button>
+      <span id="inventoryCapacity">0 / 24</span>
+    </div>
+    <div id="inventoryList" class="item-grid"></div>
+  </dialog>
+
+  <dialog id="dexModal" class="modal wide">
+    <div class="modal-head">
+      <h2>Fish Dex <span id="dexProgress">0/20</span></h2>
+      <button data-close="dexModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div class="modal-tools">
+      <label>Рідкість
+        <select id="dexRarityFilter">
+          <option value="all">усі</option>
+          <option value="common">звичайні</option>
+          <option value="uncommon">незвичайні</option>
+          <option value="rare">рідкісні</option>
+          <option value="epic">епічні</option>
+          <option value="legendary">легендарні</option>
+        </select>
+      </label>
+      <label>Статус
+        <select id="dexStatusFilter">
+          <option value="all">усі</option>
+          <option value="caught">спіймані</option>
+          <option value="missing">невідомі</option>
+        </select>
+      </label>
+    </div>
+    <div id="dexList" class="dex-grid"></div>
+  </dialog>
+
+  <dialog id="shopModal" class="modal wide">
+    <div class="modal-head">
+      <h2>Магазин</h2>
+      <button data-close="shopModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div class="shop-tabs">
+      <button data-tab="rods" class="active">Вудки</button>
+      <button data-tab="bait">Наживка</button>
+      <button data-tab="storage">Сховище</button>
+    </div>
+    <div id="shopList" class="shop-list"></div>
+  </dialog>
+
+  <dialog id="enchantModal" class="modal">
+    <div class="modal-head">
+      <h2>Будинок зачарувань</h2>
+      <button data-close="enchantModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div id="enchantList" class="shop-list"></div>
+  </dialog>
+
+  <dialog id="sleepModal" class="modal">
+    <div class="modal-head">
+      <h2>Будинок сну</h2>
+      <button data-close="sleepModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div class="sleep-options">
+      <button data-sleep="morning">До ранку</button>
+      <button data-sleep="noon">До дня</button>
+      <button data-sleep="evening">До вечора</button>
+      <button data-sleep="night">До ночі</button>
+    </div>
+  </dialog>
+
+  <dialog id="questsModal" class="modal wide">
+    <div class="modal-head">
+      <h2>Квести</h2>
+      <button data-close="questsModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div id="questsList" class="shop-list"></div>
+  </dialog>
+
+  <dialog id="trophyModal" class="modal wide">
+    <div class="modal-head">
+      <h2>Трофейна кімната</h2>
+      <button data-close="trophyModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div id="trophyList" class="dex-grid"></div>
+  </dialog>
+
+  <dialog id="mapModal" class="modal wide">
+    <div class="modal-head">
+      <h2>Локації</h2>
+      <button data-close="mapModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div id="locationList" class="shop-list"></div>
+  </dialog>
+
+  <dialog id="aquariumModal" class="modal wide">
+    <div class="modal-head">
+      <h2>Акваріум</h2>
+      <button data-close="aquariumModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div class="modal-tools">
+      <span id="aquariumBonus">Бонус: 0%</span>
+      <button id="collectAquariumButton">Зібрати прибуток</button>
+    </div>
+    <div id="aquariumList" class="dex-grid"></div>
+  </dialog>
+
+  <dialog id="craftModal" class="modal wide">
+    <div class="modal-head">
+      <h2>Крафт</h2>
+      <button data-close="craftModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div id="resourceBar" class="resource-bank"></div>
+    <div id="craftList" class="shop-list"></div>
+  </dialog>
+
+  <dialog id="achievementsModal" class="modal wide">
+    <div class="modal-head">
+      <h2>Досягнення</h2>
+      <button data-close="achievementsModal" class="icon-button" aria-label="Закрити">×</button>
+    </div>
+    <div id="achievementsList" class="dex-grid"></div>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>

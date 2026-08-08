@@ -1,0 +1,735 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+:root {
+  --pixel-font: "Press Start 2P", "Courier New", monospace;
+}
+
+:root {
+  --panel: rgba(71, 43, 45, 0.94);
+  --panel-solid: #472b2d;
+  --panel-soft: #6b3c3d;
+  --text: #fff8df;
+  --muted: #e4cfa4;
+  --line: #1d1517;
+  --gold: #ffd465;
+  --green: #73b84b;
+  --red: #d34a45;
+  --blue: #5eb8d3;
+  --shadow: 6px 6px 0 #1d1517;
+  font-family: var(--pixel-font);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #2c2530;
+  color: var(--text);
+  overflow-x: hidden;
+  image-rendering: pixelated;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+button {
+  border: 4px solid #1d1517;
+  background: #e5bd72;
+  color: #271a18;
+  border-radius: 0;
+  padding: 10px 14px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #5a342b;
+  transition: transform 0.08s steps(1), filter 0.08s steps(1);
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+button:hover {
+  filter: brightness(1.06);
+}
+
+button:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0 #5a342b;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.8) brightness(0.75);
+}
+
+.game-shell {
+  width: min(1500px, 100%);
+  margin: 0 auto;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto minmax(420px, 1fr) auto;
+  background: #2c2530;
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.2fr) minmax(260px, 1.7fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  background: #4b2c31;
+  border-bottom: 5px solid var(--line);
+  position: relative;
+  z-index: 5;
+  box-shadow: inset 0 -4px 0 #8d4d3f;
+}
+
+.player-block,
+.resource-row,
+.quick-actions,
+.control-dock,
+.bait-panel,
+.mobile-controls,
+.modal-tools,
+.shop-tabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.resource-row {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.quick-actions {
+  justify-content: flex-end;
+}
+
+.badge,
+.stat {
+  background: #2b3445;
+  border: 3px solid var(--line);
+  border-radius: 0;
+  padding: 8px 10px;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 #8d4d3f;
+  font-size: 11px;
+}
+
+.stat span {
+  color: var(--gold);
+}
+
+.xp-wrap {
+  min-width: 180px;
+  flex: 1;
+  height: 28px;
+  border: 3px solid var(--line);
+  background: #202635;
+  border-radius: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.xp-fill {
+  height: 100%;
+  width: 0%;
+  background: repeating-linear-gradient(90deg, #4fb85d 0 12px, #70d26e 12px 20px, #f2c961 20px 28px);
+  transition: width 0.25s ease;
+}
+
+.xp-wrap span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  text-shadow: 0 1px 2px #000;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  background: #2b3445;
+  color: var(--text);
+  box-shadow: 3px 3px 0 #1d1517;
+}
+
+.scene-wrap {
+  min-height: 420px;
+  position: relative;
+  overflow: hidden;
+  background: #64abd5;
+  touch-action: manipulation;
+  border-left: 5px solid #1d1517;
+  border-right: 5px solid #1d1517;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  background: #fff8ef;
+  border: 5px solid var(--line);
+  border-radius: 0;
+  color: #271a18;
+  box-shadow: 5px 5px 0 #6f3c36;
+  pointer-events: none;
+  max-width: min(620px, calc(100% - 24px));
+  text-align: center;
+}
+
+.bite-prompt {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 0;
+  background: #fff5ab;
+  color: #cf322a;
+  font-weight: 900;
+  font-size: 34px;
+  border: 5px solid #1d1517;
+  pointer-events: none;
+  animation: pop 0.38s infinite alternate;
+}
+
+@keyframes pop {
+  from { transform: translate(-50%, -96%) scale(0.95); }
+  to { transform: translate(-50%, -108%) scale(1.08); }
+}
+
+.hidden {
+  display: none !important;
+}
+
+.reel-panel {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  width: min(520px, calc(100% - 24px));
+  padding: 14px;
+  background: #472b2d;
+  border: 5px solid var(--line);
+  border-radius: 0;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 9px;
+}
+
+.reel-panel span {
+  font-weight: 700;
+}
+
+.reel-panel small {
+  color: var(--muted);
+}
+
+.tension-track {
+  height: 24px;
+  display: grid;
+  grid-template-columns: 24% 52% 24%;
+  position: relative;
+  border: 4px solid #1d1517;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.danger.left,
+.danger.right {
+  background: #d34a45;
+}
+
+.safe {
+  background: #73b84b;
+}
+
+.tension-needle {
+  position: absolute;
+  top: -3px;
+  width: 5px;
+  height: 30px;
+  left: 50%;
+  background: #fff8df;
+  box-shadow: 3px 0 0 #1d1517;
+  transition: left 0.08s linear;
+}
+
+.buildings {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 110px;
+  height: 70px;
+  pointer-events: none;
+}
+
+.building {
+  position: absolute;
+  pointer-events: auto;
+  min-width: 98px;
+  padding: 9px 12px;
+  background: #e5bd72;
+}
+
+.building.shop {
+  left: 7%;
+}
+
+.building.enchant {
+  right: 17%;
+}
+
+.building.sleep {
+  right: 5%;
+}
+
+.control-dock {
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #4b2c31;
+  border-top: 5px solid var(--line);
+  min-height: 74px;
+  box-shadow: inset 0 4px 0 #8d4d3f;
+}
+
+.bait-panel {
+  min-width: 0;
+}
+
+.bait-panel > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.bait-choices {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.bait-choice {
+  width: 54px;
+  height: 46px;
+  padding: 3px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  place-items: center;
+  background: #2b3445;
+  color: var(--text);
+  box-shadow: 3px 3px 0 #1d1517;
+  position: relative;
+}
+
+.bait-choice.active {
+  border-color: var(--gold);
+  outline: 3px solid #fff8df;
+}
+
+.bait-choice small {
+  font-size: 11px;
+  color: #dcebf4;
+}
+
+.message-log {
+  min-width: 230px;
+  max-width: 520px;
+  color: #fff8df;
+  background: #2b3445;
+  border: 4px solid var(--line);
+  border-radius: 0;
+  padding: 10px 12px;
+  font-size: 10px;
+}
+
+.modal {
+  width: min(720px, calc(100% - 22px));
+  max-height: min(760px, calc(100vh - 22px));
+  color: var(--text);
+  background: #4b2c31;
+  border: 6px solid var(--line);
+  border-radius: 0;
+  box-shadow: var(--shadow);
+  padding: 0;
+}
+
+.modal.wide {
+  width: min(1060px, calc(100% - 22px));
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 5px solid var(--line);
+  background: #8d4d3f;
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.modal-tools,
+.shop-tabs {
+  padding: 12px 14px;
+  border-bottom: 4px solid var(--line);
+  flex-wrap: wrap;
+  background: #5c3735;
+}
+
+label {
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+select {
+  color: var(--text);
+  background: #2b3445;
+  border: 4px solid var(--line);
+  border-radius: 0;
+  padding: 8px;
+}
+
+.item-grid,
+.dex-grid,
+.shop-list,
+.sleep-options {
+  padding: 14px;
+}
+
+.item-grid,
+.dex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  overflow: auto;
+  max-height: 560px;
+}
+
+.fish-card,
+.shop-card,
+.enchant-card {
+  border: 4px solid var(--line);
+  background: #f0d18b;
+  color: #271a18;
+  border-radius: 0;
+  padding: 12px;
+  display: grid;
+  gap: 7px;
+  box-shadow: 4px 4px 0 #6f3c36;
+}
+
+.fish-card .sprite {
+  min-height: 34px;
+}
+
+.pixel-fish,
+.pixel-bait {
+  image-rendering: pixelated;
+}
+
+.pixel-fish {
+  --fish: #79c35a;
+  --accent: #253d27;
+  width: 56px;
+  height: 34px;
+  position: relative;
+  display: inline-block;
+  filter: drop-shadow(3px 3px 0 #1d1517);
+}
+
+.pixel-fish::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 10px;
+  width: 30px;
+  height: 14px;
+  background:
+    linear-gradient(var(--accent), var(--accent)) 20px 4px / 8px 4px no-repeat,
+    var(--fish);
+  box-shadow:
+    -6px 4px 0 var(--fish),
+    6px -4px 0 var(--fish),
+    30px 4px 0 #111;
+}
+
+.pixel-fish::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 6px;
+  width: 12px;
+  height: 22px;
+  background:
+    linear-gradient(135deg, transparent 0 34%, var(--accent) 35% 65%, transparent 66%) center / 100% 100%;
+}
+
+.pixel-fish.missing {
+  --fish: #33343f;
+  --accent: #1d1517;
+  opacity: 0.82;
+}
+
+.pixel-bait {
+  width: 23px;
+  height: 19px;
+  display: inline-block;
+  position: relative;
+}
+
+.pixel-bait::before,
+.pixel-bait::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+
+.pixel-bait.worm {
+  color: #e88962;
+}
+
+.pixel-bait.worm::before {
+  left: 2px;
+  top: 9px;
+  width: 18px;
+  height: 5px;
+  box-shadow: 5px -5px 0 currentColor;
+}
+
+.pixel-bait.maggot {
+  color: #f6efd0;
+}
+
+.pixel-bait.maggot::before {
+  left: 4px;
+  top: 7px;
+  width: 14px;
+  height: 7px;
+  box-shadow: 3px 0 0 #c8bf93;
+}
+
+.pixel-bait.corn {
+  color: #ffd85f;
+}
+
+.pixel-bait.corn::before {
+  left: 7px;
+  top: 2px;
+  width: 10px;
+  height: 15px;
+  box-shadow: -4px 5px 0 #6ba54a;
+}
+
+.pixel-bait.bread {
+  color: #e7c687;
+}
+
+.pixel-bait.bread::before {
+  left: 4px;
+  top: 5px;
+  width: 16px;
+  height: 11px;
+  box-shadow: inset 0 -4px 0 #a87343;
+}
+
+.pixel-bait.minnow {
+  color: #7fc7d8;
+}
+
+.pixel-bait.minnow::before {
+  left: 5px;
+  top: 7px;
+  width: 14px;
+  height: 7px;
+  box-shadow: -5px 2px 0 #4e8793, 12px 1px 0 #111;
+}
+
+.pixel-bait.magic {
+  color: #f6dd75;
+}
+
+.pixel-bait.magic::before {
+  left: 10px;
+  top: 1px;
+  width: 5px;
+  height: 17px;
+}
+
+.pixel-bait.magic::after {
+  left: 4px;
+  top: 7px;
+  width: 17px;
+  height: 5px;
+}
+
+.fish-card h3,
+.shop-card h3,
+.enchant-card h3 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.fish-card p,
+.shop-card p,
+.enchant-card p {
+  margin: 0;
+  color: #563c32;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.rarity-common { color: #d8e5ed; }
+.rarity-uncommon { color: #83df93; }
+.rarity-rare { color: #69c3ff; }
+.rarity-epic { color: #e29cff; }
+.rarity-legendary { color: #ffd76d; }
+
+.shop-tabs button {
+  background: #2b3445;
+  color: var(--text);
+  box-shadow: 3px 3px 0 #1d1517;
+}
+
+.shop-tabs button.active {
+  border-color: var(--gold);
+  color: #fff5c8;
+}
+
+.shop-list {
+  display: grid;
+  gap: 10px;
+  max-height: 560px;
+  overflow: auto;
+}
+
+.shop-card,
+.enchant-card {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.shop-card.locked,
+.enchant-card.locked {
+  opacity: 0.58;
+}
+
+.sleep-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 860px) {
+  .game-shell {
+    grid-template-rows: auto minmax(380px, 58vh) auto;
+  }
+
+  .topbar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .resource-row {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .player-block {
+    min-width: 0;
+  }
+
+  .control-dock {
+    display: grid;
+    gap: 10px;
+  }
+
+  .message-log {
+    max-width: none;
+    width: 100%;
+  }
+
+  .buildings {
+    bottom: 92px;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar,
+  .control-dock {
+    padding: 8px;
+  }
+
+  .player-block,
+  .mobile-controls {
+    flex-wrap: wrap;
+  }
+
+  .xp-wrap {
+    flex-basis: 100%;
+  }
+
+  .stat,
+  .badge {
+    font-size: 12px;
+    padding: 7px 8px;
+  }
+
+  .hint {
+    top: 10px;
+    font-size: 13px;
+  }
+
+  .building {
+    min-width: 74px;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .building.enchant {
+    right: 24%;
+  }
+
+  .bait-choice {
+    width: 47px;
+    height: 42px;
+  }
+
+  .shop-card,
+  .enchant-card {
+    grid-template-columns: 1fr;
+  }
+
+  .sleep-options {
+    grid-template-columns: 1fr;
+  }
+}
