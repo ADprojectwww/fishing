@@ -129,6 +129,8 @@ const defaultGame = () => ({
   ownedRods: ["bamboo"],
   inventory: [],
   capacity: 24,
+  nets: [],
+  netsOwned: 2,
   bait: BAITS.reduce((acc, bait) => {
     acc[bait.id] = bait.id === "worm" ? 18 : bait.id === "magic" ? 1 : 5;
     return acc;
@@ -182,7 +184,8 @@ function init() {
     "enchantList", "questsButton", "mapButton", "trophyButton", "aquariumButton", "craftButton",
     "achievementsButton", "questsModal", "trophyModal", "mapModal", "aquariumModal", "craftModal",
     "achievementsModal", "questsList", "trophyList", "locationList", "aquariumList", "craftList",
-    "achievementsList", "toastLayer", "resourceBar", "aquariumBonus", "collectAquariumButton"
+    "achievementsList", "toastLayer", "resourceBar", "aquariumBonus", "collectAquariumButton",
+    "moveLeftBtn", "moveRightBtn", "boardBoatBtn", "placeNetBtn"
   ].forEach(id => els[id] = document.getElementById(id));
 
   game = loadGame();
@@ -195,6 +198,10 @@ function init() {
     tension: 50,
     reelProgress: 0,
     holding: false,
+    player: { x: 0.38, inBoat: false, facing: "right", speed: 0.26 },
+    boat: { x: 0.45, speed: 0.32 },
+    keys: { left: false, right: false },
+    lastNetCatchCheck: performance.now(),
     weatherClock: game.nextWeatherIn || 90000,
     eventClock: game.nextEventIn || 50000,
     eventTimeLeft: game.eventTimeLeft || 90000,
@@ -237,6 +244,8 @@ function loadGame() {
     merged.unlockedLocations = Array.isArray(parsed.unlockedLocations) ? parsed.unlockedLocations : fresh.unlockedLocations;
     merged.ownedRods = Array.isArray(parsed.ownedRods) ? parsed.ownedRods : fresh.ownedRods;
     merged.inventory = Array.isArray(parsed.inventory) ? parsed.inventory : [];
+    merged.nets = Array.isArray(parsed.nets) ? parsed.nets : [];
+    merged.netsOwned = typeof parsed.netsOwned === "number" && parsed.netsOwned > 0 ? parsed.netsOwned : 2;
     merged.selectedDepth = Math.min(merged.selectedDepth || 0, (RODS[merged.rod] || RODS[0]).maxDepth);
     return merged;
   } catch {
@@ -294,26 +303,63 @@ function bindEvents() {
     });
   });
 
+  els.moveLeftBtn?.addEventListener("mousedown", () => { if (runtime.keys) runtime.keys.left = true; });
+  els.moveLeftBtn?.addEventListener("mouseup", () => { if (runtime.keys) runtime.keys.left = false; });
+  els.moveLeftBtn?.addEventListener("mouseleave", () => { if (runtime.keys) runtime.keys.left = false; });
+  els.moveLeftBtn?.addEventListener("touchstart", (e) => { e.preventDefault(); if (runtime.keys) runtime.keys.left = true; });
+  els.moveLeftBtn?.addEventListener("touchend", (e) => { e.preventDefault(); if (runtime.keys) runtime.keys.left = false; });
+
+  els.moveRightBtn?.addEventListener("mousedown", () => { if (runtime.keys) runtime.keys.right = true; });
+  els.moveRightBtn?.addEventListener("mouseup", () => { if (runtime.keys) runtime.keys.right = false; });
+  els.moveRightBtn?.addEventListener("mouseleave", () => { if (runtime.keys) runtime.keys.right = false; });
+  els.moveRightBtn?.addEventListener("touchstart", (e) => { e.preventDefault(); if (runtime.keys) runtime.keys.right = true; });
+  els.moveRightBtn?.addEventListener("touchend", (e) => { e.preventDefault(); if (runtime.keys) runtime.keys.right = false; });
+
+  els.boardBoatBtn?.addEventListener("click", handleActionKey);
+  els.placeNetBtn?.addEventListener("click", placeNet);
+
   window.addEventListener("keydown", event => {
+    const k = event.code;
+    const keyLower = event.key ? event.key.toLowerCase() : "";
+    if (k === "KeyA" || k === "ArrowLeft") {
+      runtime.keys.left = true;
+      return;
+    }
+    if (k === "KeyD" || k === "ArrowRight") {
+      runtime.keys.right = true;
+      return;
+    }
+    if (keyLower === "e") {
+      handleActionKey();
+      return;
+    }
+    if (keyLower === "n") {
+      placeNet();
+      return;
+    }
+
     if (event.repeat && event.code !== "Space") return;
     if (event.code === "Space") {
       event.preventDefault();
       if (runtime.phase === "bite") hookFish();
       runtime.holding = true;
     }
-    if (event.key.toLowerCase() === "s" || event.key === "ArrowDown") {
+    if (keyLower === "s" || event.key === "ArrowDown") {
       event.preventDefault();
       cycleDepth();
     }
-    if (event.key.toLowerCase() === "e") openInventory();
-    if (event.key.toLowerCase() === "i") openFishDex();
-    if (event.key.toLowerCase() === "q") openQuests();
-    if (event.key.toLowerCase() === "m") openMap();
-    if (event.key.toLowerCase() === "t") openTrophies();
-    if (event.key.toLowerCase() === "a") openAquarium();
-    if (event.key.toLowerCase() === "c") openCraft();
+    if (keyLower === "i") openInventory();
+    if (keyLower === "f") openFishDex();
+    if (keyLower === "q") openQuests();
+    if (keyLower === "m") openMap();
+    if (keyLower === "t") openTrophies();
+    if (keyLower === "u") openAquarium();
+    if (keyLower === "c") openCraft();
   });
   window.addEventListener("keyup", event => {
+    const k = event.code;
+    if (k === "KeyA" || k === "ArrowLeft") runtime.keys.left = false;
+    if (k === "KeyD" || k === "ArrowRight") runtime.keys.right = false;
     if (event.code === "Space") runtime.holding = false;
   });
   ["pointerdown", "touchstart", "mousedown"].forEach(type => {
@@ -703,6 +749,18 @@ function renderShop() {
     els.shopList.querySelectorAll("[data-buy-bait]").forEach(button => button.addEventListener("click", () => buyBait(button.dataset.buyBait)));
     return;
   }
+  if (game.shopTab === "nets") {
+    els.shopList.innerHTML = `<article class="shop-card">
+      <div>
+        <h3>🕸 Риболовна сіть</h3>
+        <p>Автоматично ловить рибу кожні 18 секунд у водоймі (місткість: 5 риб).</p>
+        <p>У вас в інвентарі: <strong>${game.netsOwned || 0} шт.</strong> | Встановити: [N] або кнопка 'Сіть'.</p>
+      </div>
+      <button data-buy-net>220 монет</button>
+    </article>`;
+    els.shopList.querySelector("[data-buy-net]")?.addEventListener("click", buyNet);
+    return;
+  }
   if (game.shopTab === "storage") {
     const cost = storageCost();
     els.shopList.innerHTML = `<article class="shop-card">
@@ -784,6 +842,185 @@ function buyBait(id) {
   renderShop();
   updateUI();
   subtleSave();
+}
+
+function buyNet() {
+  if (game.coins < 220) {
+    flash("Не вистачає монет (потрібно 220 монет).");
+    return;
+  }
+  game.coins -= 220;
+  game.netsOwned = (game.netsOwned || 0) + 1;
+  flash("Куплено риболовну сіть! Натисніть [N] або кнопку 'Сіть', щоб встановити її у воду.");
+  renderShop();
+  updateUI();
+  subtleSave();
+}
+
+function handleActionKey() {
+  if (!runtime || !runtime.player) return;
+  const p = runtime.player;
+  const b = runtime.boat;
+  const currX = p.inBoat ? b.x : p.x;
+
+  // 1. Harvest nearby net
+  if (game.nets && game.nets.length > 0) {
+    const nearbyIdx = game.nets.findIndex(net => Math.abs(net.x - currX) < 0.09);
+    if (nearbyIdx >= 0) {
+      harvestNet(nearbyIdx);
+      return;
+    }
+  }
+
+  // 2. Toggle boat
+  if (p.inBoat) {
+    if (b.x <= 0.52) {
+      p.inBoat = false;
+      p.x = 0.42;
+      flash("Ви вийшли з човна на пірс.");
+      updateHint();
+      return;
+    } else {
+      flash("Підпливіть ліворуч до пірсу (клавіша A), щоб вийти з човна.");
+      return;
+    }
+  } else {
+    if (p.x >= 0.32) {
+      p.inBoat = true;
+      flash("Ви сіли в човен! Плавайте клавішами A/D або стрілками та закидайте вудку.");
+      updateHint();
+      return;
+    } else {
+      flash("Підійдіть ближче до пірсу/човна (праворуч, клавіша D), щоб сісти.");
+      return;
+    }
+  }
+}
+
+function placeNet() {
+  if (!game.netsOwned || game.netsOwned <= 0) {
+    game.netsOwned = 2;
+  }
+  if (game.nets && game.nets.length >= 4) {
+    flash("Максимальна кількість активних сіток — 4.");
+    return;
+  }
+  const posX = runtime.player.inBoat ? runtime.boat.x : Math.max(0.32, runtime.player.x);
+  game.netsOwned -= 1;
+  game.nets.push({
+    id: Date.now() + Math.random(),
+    x: posX,
+    depth: game.selectedDepth,
+    caught: [],
+    maxCapacity: 5,
+    lastCatch: Date.now()
+  });
+  flash("🕸 Риболовну сіть успішно встановлено у воду! Вона ловитиме рибу автоматично.");
+  subtleSave();
+}
+
+function harvestNet(index) {
+  const net = game.nets[index];
+  if (!net || !net.caught || net.caught.length === 0) {
+    flash("У цій сітці ще немає риби. Зачекайте трохи.");
+    return;
+  }
+  let count = 0;
+  const caughtList = [...net.caught];
+  net.caught = [];
+
+  caughtList.forEach(fish => {
+    if (game.inventory.length < game.capacity) {
+      game.inventory.unshift({
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+        fishId: fish.id,
+        weight: fish.weight,
+        caughtAt: Date.now()
+      });
+      count++;
+      registerFishCatchStatsOnly(fish);
+    }
+  });
+
+  if (count > 0) {
+    flash(`Зібрано ${count} риб із сіті!`);
+    playSound("catch");
+  } else {
+    flash("Інвентар повний! Продайте рибу, щоб звільнити місце.");
+  }
+  updateUI();
+  subtleSave();
+}
+
+function registerFishCatchStatsOnly(fish) {
+  const existing = game.dex[fish.id] || { caught: false, count: 0, best: 0 };
+  existing.caught = true;
+  existing.count += 1;
+  existing.best = Math.max(existing.best || 0, fish.weight);
+  game.dex[fish.id] = existing;
+  game.stats.totalCaught += 1;
+  game.stats.totalWeight = Number((game.stats.totalWeight + fish.weight).toFixed(2));
+}
+
+function updateNets(now) {
+  if (!game.nets) game.nets = [];
+  if (now - (runtime.lastNetCatchCheck || 0) < 18000) return;
+  runtime.lastNetCatchCheck = now;
+
+  game.nets.forEach(net => {
+    if (!net.caught) net.caught = [];
+    if (net.caught.length < (net.maxCapacity || 5)) {
+      const fish = spawnFishForNet(net.x, net.depth);
+      net.caught.push(fish);
+    }
+  });
+}
+
+function spawnFishForNet(x, depth = 0) {
+  const period = getTimePeriod();
+  const weighted = FISH.map(fish => {
+    let w = fish.base;
+    w *= fish.depths.includes(depth) ? 1.6 : 0.4;
+    w *= fish.times.includes(period) || fish.times.includes("any") ? 1.4 : 0.5;
+    return { fish, w };
+  });
+  const total = weighted.reduce((acc, item) => acc + item.w, 0);
+  let pick = Math.random() * total;
+  for (const item of weighted) {
+    pick -= item.w;
+    if (pick <= 0) {
+      const weight = rand(item.fish.min, item.fish.max);
+      return { ...item.fish, weight: Number(weight.toFixed(1)) };
+    }
+  }
+  return { ...FISH[0], weight: 0.5 };
+}
+
+function updateMovement(dt) {
+  if (!runtime || !runtime.player) return;
+  const p = runtime.player;
+  const b = runtime.boat;
+
+  if (p.inBoat) {
+    if (runtime.keys.left) {
+      b.x = Math.max(0.40, b.x - b.speed * dt);
+      p.facing = "left";
+    }
+    if (runtime.keys.right) {
+      b.x = Math.min(0.96, b.x + b.speed * dt);
+      p.facing = "right";
+    }
+    p.x = b.x;
+  } else {
+    if (runtime.keys.left) {
+      p.x = Math.max(0.04, p.x - p.speed * dt);
+      p.facing = "left";
+    }
+    if (runtime.keys.right) {
+      p.x = Math.min(0.44, p.x + p.speed * dt);
+      p.facing = "right";
+    }
+  }
 }
 
 function buyOrEquipRod(index) {
@@ -894,8 +1131,10 @@ function renderBaits() {
 }
 
 function updateHint() {
+  const p = runtime.player;
+  const inBoatText = p && p.inBoat ? " (в човні)" : "";
   const map = {
-    idle: "Клікни або тапни по озеру, щоб закинути вудку",
+    idle: `A/D — ходити/плавати${inBoatText} | E — сісти в човен/дія | N — сіть | Клік по озеру — закинути`,
     waiting: "Чекай на кльов. S або ↓ змінює глибину",
     bite: "Підсікай! Натисни пробіл, кнопку або тапни по озеру",
     reeling: "Вивуджуй: утримуй і відпускай, щоб тримати натяг у зеленій зоні"
@@ -908,6 +1147,8 @@ function loop(now) {
   const dt = dtMs / 1000;
   lastFrame = now;
 
+  updateMovement(dt);
+  updateNets(now);
   updateDayNightCycle(dtMs);
   updateWeather(dtMs);
   updateFishingState(now, dt);
@@ -916,7 +1157,7 @@ function loop(now) {
 
   if (now - lastSave > 20000) {
     lastSave = now;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...game, nextWeatherIn: runtime.weatherClock }));
+    saveGame();
   }
   requestAnimationFrame(loop);
 }
@@ -959,8 +1200,9 @@ function drawScene(now, dt) {
   ctx.imageSmoothingEnabled = false;
   drawSky(w, h, now);
   drawFarTrees(w, h, now);
-  drawBuildings(w, h);
   drawWater(w, h, waterTop, now, dt);
+  drawNets(w, h, now);
+  drawBuildings(w, h);
   drawShore(w, h, now);
   drawAngler(w, h, now);
   drawFishingLine(w, h, now);
@@ -1071,13 +1313,18 @@ function drawFarTrees(w, h, now) {
 
 function drawBuildings(w, h) {
   const y = h * 0.39;
-  drawPier(w * 0.36, y + 36, w * 0.42);
-  drawCabin(w * 0.18, y, 112, "#b66a45", "#7f3548");
-  drawCrate(w * 0.055, y + 70);
-  drawBarrel(w * 0.085, y + 64);
-  drawCabin(w * 0.79, y + 22, 62, "#65447a", "#9fd6ff");
-  drawCabin(w * 0.91, y + 32, 54, "#8f563d", "#f0d17e");
-  drawBoat(w * 0.72, h * 0.55, 1);
+  // Shore hill ground on land
+  pixelRect(0, y + 20, w * 0.34, h * 0.4, "#6ea044");
+  pixelRect(0, y + 42, w * 0.34, 14, "#427b30");
+
+  // Wooden Pier extending from shore into water
+  drawPier(w * 0.28, y + 36, w * 0.18);
+  // Fisherman Cabin squarely on land
+  drawCabin(w * 0.14, y, 114, "#b66a45", "#7f3548");
+  drawCrate(w * 0.04, y + 68);
+  drawBarrel(w * 0.08, y + 62);
+  // Background cabin
+  drawCabin(w * 0.84, y + 22, 54, "#65447a", "#9fd6ff");
 }
 
 function drawCabin(x, y, size, wall, roof) {
@@ -1161,20 +1408,122 @@ function drawShore(w, h, now) {
 }
 
 function drawAngler(w, h, now) {
-  const x = px(w * 0.47);
-  const y = px(h * 0.64);
-  const castLift = runtime.phase === "waiting" || runtime.phase === "bite" || runtime.phase === "reeling" ? -10 : Math.sin(now / 450) * 4;
-  outlinedRect(x - 11, y - 64, 22, 20, "#26384a", "#1a1215", 3);
-  pixelRect(x - 7, y - 58, 6, 5, "#f0b27a");
-  pixelRect(x + 5, y - 58, 4, 5, "#f0b27a");
-  outlinedRect(x - 10, y - 42, 20, 32, "#c98048", "#1a1215", 3);
-  pixelRect(x - 16, y - 38, 8, 24, "#f0b27a");
-  pixelRect(x + 9, y - 38, 8, 24, "#f0b27a");
-  pixelRect(x - 12, y - 10, 8, 28, "#1f3344");
-  pixelRect(x + 5, y - 10, 8, 28, "#1f3344");
-  pixelRect(x - 18, y + 14, 16, 6, "#161a22");
-  pixelRect(x + 5, y + 14, 18, 6, "#161a22");
-  drawPixelRod(x + 15, y - 42, x + 235, y - 142 + castLift, "#4c2f20");
+  const p = runtime.player;
+  const b = runtime.boat;
+
+  if (p.inBoat) {
+    // Player inside boat
+    const bx = px(w * b.x);
+    const by = px(h * 0.55);
+    drawBoat(bx, by, 1.15, true);
+  } else {
+    // Empty boat at pier position
+    const bx = px(w * b.x);
+    const by = px(h * 0.55);
+    drawBoat(bx, by, 1.0, false);
+
+    // Player walking/standing on shore/pier
+    const pxPos = px(w * p.x);
+    const pyPos = px(h * 0.64);
+    const castLift = runtime.phase === "waiting" || runtime.phase === "bite" || runtime.phase === "reeling" ? -10 : Math.sin(now / 450) * 4;
+    const isWalking = runtime.keys.left || runtime.keys.right;
+    const legAnim = isWalking ? Math.sin(now / 120) * 6 : 0;
+
+    outlinedRect(pxPos - 11, pyPos - 64, 22, 20, "#26384a", "#1a1215", 3);
+    pixelRect(pxPos - 7, pyPos - 58, 6, 5, "#f0b27a");
+    pixelRect(pxPos + 5, pyPos - 58, 4, 5, "#f0b27a");
+    outlinedRect(pxPos - 10, pyPos - 42, 20, 32, "#c98048", "#1a1215", 3);
+    pixelRect(pxPos - 16, pyPos - 38, 8, 24, "#f0b27a");
+    pixelRect(pxPos + 9, pyPos - 38, 8, 24, "#f0b27a");
+    pixelRect(pxPos - 12 + legAnim, pyPos - 10, 8, 28, "#1f3344");
+    pixelRect(pxPos + 5 - legAnim, pyPos - 10, 8, 28, "#1f3344");
+    pixelRect(pxPos - 18 + legAnim, pyPos + 14, 16, 6, "#161a22");
+    pixelRect(pxPos + 5 - legAnim, pyPos + 14, 18, 6, "#161a22");
+
+    const rodDir = p.facing === "left" ? -1 : 1;
+    drawPixelRod(pxPos + 15 * rodDir, pyPos - 42, pxPos + 220 * rodDir, pyPos - 142 + castLift, "#4c2f20");
+  }
+}
+
+function drawBoat(x, y, scale, hasPlayer = false) {
+  const s = 4.5 * scale;
+  pixelRect(x - 20 * s, y + 4 * s, 40 * s, 7 * s, "#1d1517");
+  pixelRect(x - 17 * s, y, 35 * s, 9 * s, "#ba7046");
+  pixelRect(x - 14 * s, y + 8 * s, 28 * s, 6 * s, "#774333");
+  pixelRect(x - 8 * s, y + 2 * s, 4 * s, 10 * s, "#a35a3a");
+  pixelRect(x + 4 * s, y + 2 * s, 4 * s, 10 * s, "#a35a3a");
+
+  if (hasPlayer) {
+    pixelRect(x - 4 * s, y - 18 * s, 12 * s, 16 * s, "#c98048");
+    pixelRect(x - 3 * s, y - 28 * s, 10 * s, 10 * s, "#26384a");
+    pixelRect(x - 2 * s, y - 24 * s, 8 * s, 6 * s, "#f0b27a");
+    const castLift = runtime.phase === "waiting" || runtime.phase === "bite" || runtime.phase === "reeling" ? -10 : 0;
+    drawPixelRod(x + 5 * s, y - 16 * s, x + 40 * s, y - 35 * s + castLift, "#4c2f20");
+  } else {
+    drawPixelLine(x - 10 * s, y - 10 * s, x + 18 * s, y + 16 * s, "#6d3f2a", 4);
+    drawPixelLine(x - 18 * s, y - 6 * s, x + 10 * s, y + 20 * s, "#6d3f2a", 4);
+
+    const p = runtime.player;
+    if (p && !p.inBoat && p.x >= 0.28) {
+      ctx.save();
+      ctx.font = "bold 13px Consolas, monospace";
+      ctx.textAlign = "center";
+      pixelRect(x - 55, y - 36, 110, 20, "#68c35a");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText("🚣 [E] Сісти в човен", x, y - 22);
+      ctx.restore();
+    }
+  }
+}
+
+function drawNets(w, h, now) {
+  if (!game.nets || !game.nets.length) return;
+  const waterTop = h * 0.42;
+  const pX = runtime.player.inBoat ? runtime.boat.x : runtime.player.x;
+
+  game.nets.forEach(net => {
+    const nx = net.x * w;
+    const ny = waterTop + 45;
+    const bob = Math.sin(now / 380 + nx) * 3;
+
+    outlinedRect(nx - 14, ny + bob - 10, 10, 12, "#df514a", "#1d1517", 2);
+    outlinedRect(nx + 14, ny + bob - 10, 10, 12, "#ffffff", "#1d1517", 2);
+    drawPixelLine(nx - 10, ny + bob, nx + 18, ny + bob, "#ffd560", 3);
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.45)";
+    ctx.lineWidth = 2;
+    for (let row = 0; row < 4; row++) {
+      ctx.beginPath();
+      ctx.moveTo(nx - 20, ny + 10 + row * 12);
+      ctx.lineTo(nx + 20, ny + 10 + row * 12);
+      ctx.stroke();
+    }
+    for (let col = -18; col <= 18; col += 9) {
+      ctx.beginPath();
+      ctx.moveTo(nx + col, ny + 5);
+      ctx.lineTo(nx + col, ny + 50);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    const caughtCount = net.caught ? net.caught.length : 0;
+    const isClose = Math.abs(pX - net.x) < 0.08;
+
+    ctx.save();
+    ctx.font = "bold 13px Consolas, monospace";
+    ctx.textAlign = "center";
+
+    pixelRect(nx - 32, ny - 32 + bob, 64, 18, isClose ? "#68c35a" : "#342a37");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`🕸 ${caughtCount}/${net.maxCapacity || 5}`, nx, ny - 18 + bob);
+
+    if (isClose) {
+      ctx.fillStyle = "#ffd560";
+      ctx.fillText("[E] Зібрати", nx, ny - 36 + bob);
+    }
+    ctx.restore();
+  });
 }
 
 function drawFishingLine(w, h, now) {
@@ -1295,17 +1644,7 @@ function drawBarrel(x, y) {
   pixelRect(x + 8, y + 12, 12, 4, "#e0a05e");
 }
 
-function drawBoat(x, y, scale) {
-  const s = 4 * scale;
-  pixelRect(x - 18 * s, y + 4 * s, 38 * s, 6 * s, "#1d1517");
-  pixelRect(x - 15 * s, y, 31 * s, 8 * s, "#ba7046");
-  pixelRect(x - 12 * s, y + 8 * s, 24 * s, 5 * s, "#774333");
-  pixelRect(x - 2 * s, y - 16 * s, 6 * s, 14 * s, "#f0b27a");
-  pixelRect(x - 4 * s, y - 24 * s, 10 * s, 8 * s, "#3f2a24");
-  pixelRect(x + 13 * s, y - 18 * s, 6 * s, 16 * s, "#f0b27a");
-  pixelRect(x + 11 * s, y - 27 * s, 10 * s, 9 * s, "#233446");
-  drawPixelLine(x + 18 * s, y - 12 * s, x + 27 * s, y + 14 * s, "#6d3f2a", 4);
-}
+
 
 function drawPixelRod(x1, y1, x2, y2, color) {
   const steps = 22;

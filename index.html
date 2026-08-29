@@ -952,9 +952,15 @@
     </section>
 
     <section class="dock" aria-label="Панель дій">
-      <button id="castButton">Закинути</button>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <button id="moveLeftBtn" title="Ходити/плавати ліворуч (A)">◄ A</button>
+        <button id="moveRightBtn" title="Ходити/плавати праворуч (D)">► D</button>
+        <button id="boardBoatBtn" title="Сісти в човен / Вийти / Дія (E)">🚣 [E] Дія</button>
+        <button id="placeNetBtn" title="Встановити риболовну сіть (N)">🕸 [N] Сіть</button>
+        <button id="castButton">Закинути</button>
+      </div>
       <div class="hotbar" id="hotbar"></div>
-      <div class="message" id="message">Персонаж стоїть на березі. Вода попереду.</div>
+      <div class="message" id="message">Персонаж на березі. Натисніть A/D для руху, E — човен/дія.</div>
     </section>
   </main>
 
@@ -984,6 +990,7 @@
     </div>
     <div class="menu-tabs" id="shopTabs">
       <button data-tab="rods" class="active">Вудочки</button>
+      <button data-tab="nets">Сіті</button>
       <button data-tab="enchants">Зачарування</button>
       <button data-tab="upgrades">Покращення</button>
     </div>
@@ -1542,6 +1549,14 @@
         particles: [],
         resultFlash: 0
       };
+
+      // === PLAYER / BOAT / NETS STATE ===
+      const player = { x: 0.36, inBoat: false, facing: "right" };
+      const boat   = { x: 0.46 };
+      const keys   = { left: false, right: false };
+      if (!state.nets) state.nets = [];
+      if (!state.netsOwned || state.netsOwned < 2) state.netsOwned = 2;
+      let lastNetUpdate = performance.now();
 
       function createRod(tierId) {
         const tier = ROD_TIERS[tierId] || ROD_TIERS.ordinary;
@@ -2613,6 +2628,31 @@
         els.shopCoins.textContent = state.coins;
         els.shopLevelPanel.textContent = state.shopLevel;
         els.shopTabs.querySelectorAll("button").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === activeShopTab));
+        if (activeShopTab === "nets") {
+          els.shopGrid.innerHTML = `
+            <article class="card">
+              <h3>🕸 Риболовна сіть</h3>
+              <p>Ставиться у воду клавішею N. Ловить рибу автоматично кожні 18 сек (до 5 риб). Забрати улов — підійдіть і натисніть E.</p>
+              <div class="meta">
+                <span class="tag">220 Coins</span>
+                <span class="tag">Маєте: ${state.netsOwned || 0} шт.</span>
+                <span class="tag">В воді: ${(state.nets || []).length} / 4</span>
+              </div>
+              <button id="buyNetBtn" ${state.coins < 220 ? "disabled" : ""}>Купити сіть (220 Coins)</button>
+            </article>
+          `;
+          const buyNetBtn = document.getElementById("buyNetBtn");
+          if (buyNetBtn) buyNetBtn.addEventListener("click", () => {
+            if (state.coins < 220) return;
+            state.coins -= 220;
+            if (!state.netsOwned) state.netsOwned = 0;
+            state.netsOwned += 1;
+            setMessage(`Куплено сіть! Маєте ${state.netsOwned} шт. Натисніть N щоб поставити.`);
+            renderAll();
+            saveGame(false);
+          });
+          return;
+        }
         if (activeShopTab === "rods") {
           els.shopGrid.innerHTML = Object.values(ROD_TIERS).map(tier => {
             const locked = state.shopLevel < tier.shop;
@@ -2946,6 +2986,12 @@
           if (fishing.phase === "reeling") fishing.holding = false;
         });
         document.addEventListener("keydown", event => {
+          // Movement keys — handle first and return so no modal opens
+          if (event.code === "KeyA" || event.code === "ArrowLeft")  { keys.left  = true;  return; }
+          if (event.code === "KeyD" || event.code === "ArrowRight") { keys.right = true;  return; }
+          if (event.key.toLowerCase() === "e") { handleAction(); return; }
+          if (event.key.toLowerCase() === "n") { placeNet();    return; }
+
           if (event.repeat) return;
           if (event.code === "Space") {
             event.preventDefault();
@@ -2958,13 +3004,38 @@
           if (event.key.toLowerCase() === "g") openModal(els.grindstoneModal);
           if (event.key.toLowerCase() === "m") openModal(els.locationModal);
           if (event.key.toLowerCase() === "q") openModal(els.questModal);
-          if (event.key.toLowerCase() === "d") openModal(els.dexModal);
+          if (event.key.toLowerCase() === "f") openModal(els.dexModal);
           if (event.key.toLowerCase() === "c") openModal(els.craftModal);
-          if (event.key.toLowerCase() === "a") openModal(els.aquariumModal);
+          if (event.key.toLowerCase() === "u") openModal(els.aquariumModal);
         });
         document.addEventListener("keyup", event => {
+          if (event.code === "KeyA" || event.code === "ArrowLeft")  keys.left  = false;
+          if (event.code === "KeyD" || event.code === "ArrowRight") keys.right = false;
           if (event.code === "Space" && fishing.phase === "reeling") fishing.holding = false;
         });
+
+        // Movement buttons
+        const moveL = document.getElementById("moveLeftBtn");
+        const moveR = document.getElementById("moveRightBtn");
+        const boardBtn = document.getElementById("boardBoatBtn");
+        const netBtn   = document.getElementById("placeNetBtn");
+        if (moveL) {
+          moveL.addEventListener("mousedown",  () => keys.left = true);
+          moveL.addEventListener("mouseup",    () => keys.left = false);
+          moveL.addEventListener("mouseleave", () => keys.left = false);
+          moveL.addEventListener("touchstart", e => { e.preventDefault(); keys.left = true; }, { passive: false });
+          moveL.addEventListener("touchend",   e => { e.preventDefault(); keys.left = false; }, { passive: false });
+        }
+        if (moveR) {
+          moveR.addEventListener("mousedown",  () => keys.right = true);
+          moveR.addEventListener("mouseup",    () => keys.right = false);
+          moveR.addEventListener("mouseleave", () => keys.right = false);
+          moveR.addEventListener("touchstart", e => { e.preventDefault(); keys.right = true; }, { passive: false });
+          moveR.addEventListener("touchend",   e => { e.preventDefault(); keys.right = false; }, { passive: false });
+        }
+        if (boardBtn) boardBtn.addEventListener("click", handleAction);
+        if (netBtn)   netBtn.addEventListener("click", placeNet);
+
         els.shopTabs.addEventListener("click", event => {
           const btn = event.target.closest("[data-tab]");
           if (!btn) return;
@@ -3004,6 +3075,8 @@
         autosaveClock += dt;
         updateWorld(dt);
         updateFishing(now, dt);
+        updatePlayerMovement(dt);
+        updateNets(now);
         drawScene(now, dt);
         renderHud();
         if (els.aquariumModal.open) renderAquarium();
@@ -3016,6 +3089,97 @@
         requestAnimationFrame(loop);
       }
 
+      // === PLAYER MOVEMENT ===
+      function updatePlayerMovement(dt) {
+        const speed = 0.28 * dt;
+        if (player.inBoat) {
+          if (keys.left)  { boat.x = Math.max(0.38, boat.x - speed); player.facing = "left"; }
+          if (keys.right) { boat.x = Math.min(0.97, boat.x + speed); player.facing = "right"; }
+        } else {
+          if (keys.left)  { player.x = Math.max(0.02, player.x - speed); player.facing = "left"; }
+          if (keys.right) { player.x = Math.min(0.55, player.x + speed); player.facing = "right"; }
+        }
+      }
+
+      // === BOARD / EXIT BOAT / HARVEST NET ===
+      function handleAction() {
+        const cx = player.inBoat ? boat.x : player.x;
+        // Harvest nearby net first
+        if (state.nets && state.nets.length) {
+          const ni = state.nets.findIndex(n => Math.abs(n.x - cx) < 0.1);
+          if (ni >= 0) {
+            harvestNet(ni);
+            return;
+          }
+        }
+        // Board / exit boat
+        if (player.inBoat) {
+          player.inBoat = false;
+          player.x = Math.min(0.50, boat.x - 0.04);
+          setMessage("Ви вийшли з човна.");
+        } else {
+          if (player.x >= 0.30) {
+            player.inBoat = true;
+            boat.x = Math.max(boat.x, 0.44);
+            setMessage("Ви сіли в човен! Плавайте A/D. Натисніть E щоб вийти.");
+          } else {
+            setMessage("Підійдіть до пірсу (праворуч, клавіша D) та натисніть E.");
+          }
+        }
+      }
+
+      // === PLACE NET ===
+      function placeNet() {
+        if (!state.netsOwned || state.netsOwned <= 0) state.netsOwned = 2;
+        if (!state.nets) state.nets = [];
+        if (state.nets.length >= 4) { setMessage("Максимум 4 сітки."); return; }
+        const posX = player.inBoat ? boat.x : Math.max(0.38, player.x);
+        state.netsOwned -= 1;
+        state.nets.push({ id: Date.now(), x: posX, caught: [], maxCapacity: 5, lastCatch: Date.now() });
+        setMessage("🕸 Сіть встановлено! Вона ловить рибу сама кожні 18 сек.");
+        saveGame(false);
+      }
+
+      // === HARVEST NET ===
+      function harvestNet(index) {
+        const net = state.nets[index];
+        if (!net || !net.caught || net.caught.length === 0) { setMessage("Сітка ще порожня. Зачекайте."); return; }
+        const count = net.caught.length;
+        net.caught.forEach(fish => {
+          if (state.fish.length < 220) state.fish.unshift({
+            uid: `net-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            id: fish.id, name: fish.name, rarity: fish.rarity,
+            weight: Number(fish.weight.toFixed(2)), value: fish.value,
+            boss: false, location: state.location, weather: state.weather,
+            time: currentTimeSegment().id, caughtAt: Date.now(),
+            color: fish.color, accent: fish.accent
+          });
+          state.stats.totalCaught += 1;
+          recordCatch(fish, { rarity: fish.rarity, weight: fish.weight, value: fish.value, location: state.location });
+        });
+        net.caught = [];
+        setMessage(`🎣 Зібрано ${count} риб із сітки!`);
+        renderAll();
+        saveGame(false);
+      }
+
+      // === AUTO-CATCH NETS ===
+      function updateNets(now) {
+        if (!state.nets || !state.nets.length) return;
+        state.nets.forEach(net => {
+          if (net.caught.length >= net.maxCapacity) return;
+          if (now - net.lastCatch < 18000) return;
+          net.lastCatch = now;
+          const fish = spawnFish();
+          if (!fish) return;
+          const weight = rand(fish.min, fish.max);
+          net.caught.push({ id: fish.id, name: fish.name, rarity: fish.rarity,
+            weight, value: Math.floor(fish.coins + weight * 6),
+            color: fish.color, accent: fish.accent });
+          toast(`🕸 Сіть спіймала: ${fish.name}!`);
+        });
+      }
+
       function drawScene(now, dt) {
         const w = view.w;
         const h = view.h;
@@ -3023,9 +3187,11 @@
         drawSky(w, h, now);
         drawTrees(w, h, now);
         drawWater(w, h, now, dt);
+        drawNets(w, h, now);
         drawShore(w, h, now);
         drawEnvironment(w, h, now);
-        drawPlayer(w, h, now);
+        drawBoatSprite(w, h, now);
+        drawPlayerSprite(w, h, now);
         drawLineAndBobber(w, h, now);
         drawWeatherEffects(w, h, now, dt);
         drawParticles();
@@ -3158,14 +3324,23 @@
       function drawEnvironment(w, h, now) {
         const y = waterRect.y + waterRect.h + 12;
         const loc = currentLocation();
+        // House on land — left side only
+        const houseX = w * 0.14;
+        const houseY = waterRect.y + waterRect.h - 30;
+        // Draw land patch behind the house
+        rect(0, waterRect.y + waterRect.h - 18, w * 0.38, h, currentLocation().land || "#72a94a");
+        drawCabin(houseX, houseY, 90);
+        // Pier from shore into water
+        drawPier(w, h);
+        // Decorations
         if (loc.id !== "lava") {
-          drawBlockTree(w * 0.1, y - 100, 1.15);
+          drawBlockTree(w * 0.04, houseY - 70, 0.85);
           drawBlockTree(w * 0.89, y - 112, 1);
         } else {
           drawLavaVent(w * 0.1, y - 18, now);
           drawLavaVent(w * 0.9, y - 24, now + 700);
         }
-        drawRock(w * 0.23, y + 55, 1.2);
+        drawRock(w * 0.27, y + 55, 1.2);
         drawRock(w * 0.77, y + 48, 0.9);
         for (let i = 0; i < 30; i += 1) {
           const x = (i * 47 + (pointer.x - 0.5) * 14) % w;
@@ -3173,7 +3348,131 @@
           rect(x, gy, 5, 25 + (i % 3) * 9, loc.id === "lava" ? "#93533f" : i % 2 ? "#2f6d2d" : "#438d35");
           rect(x - 5, gy + 8, 5, 8, loc.id === "lava" ? "#5a342d" : "#255827");
         }
-        drawCabin(w * 0.83, waterRect.y - 10, 78);
+        // Distant background cabin
+        drawCabin(w * 0.83, waterRect.y - 10, 68);
+      }
+
+      function drawPier(w, h) {
+        const pierStartX = w * 0.30;
+        const pierEndX   = w * 0.50;
+        const pierY      = waterRect.y + waterRect.h - 8;
+        const pierH      = 18;
+        // Pier planks
+        rect(pierStartX, pierY, pierEndX - pierStartX, pierH, "#8b5c35");
+        rect(pierStartX, pierY, pierEndX - pierStartX, 5, "#a8713f");
+        // Pier posts
+        for (let x = pierStartX + 14; x < pierEndX; x += 38) {
+          rect(x, pierY + pierH, 10, 34, "#5c3520");
+        }
+        // Hint label above boat when player near pier
+        if (!player.inBoat && player.x >= 0.28) {
+          const bx = Math.round(boat.x * w);
+          const by = waterRect.y + waterRect.h * 0.28;
+          rect(bx - 64, by - 22, 128, 20, "#1e441a");
+          ctx.save();
+          ctx.font = "bold 13px Consolas, monospace";
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#9fff85";
+          ctx.fillText("🚣 E — Сісти в човен", bx, by - 8);
+          ctx.restore();
+        }
+      }
+
+      function drawNets(w, h, now) {
+        if (!state.nets || !state.nets.length) return;
+        state.nets.forEach(net => {
+          const nx = net.x * w;
+          const ny = waterRect.y + waterRect.h * 0.32;
+          const bob = Math.sin(now / 380 + nx) * 3;
+          // Red and white floats
+          rect(nx - 18, ny + bob - 8, 10, 14, "#df514a");
+          rect(nx - 8,  ny + bob - 4, 10, 6, "#16131a");
+          rect(nx + 8,  ny + bob - 8, 10, 14, "#f5f5f5");
+          // Net rope
+          rect(nx - 18, ny + bob + 4, 36, 3, "#d4a030");
+          // Net web lines
+          ctx.save();
+          ctx.globalAlpha = 0.6;
+          for (let i = 0; i < 6; i++) {
+            const lx = nx - 16 + i * 6;
+            rect(lx, ny + bob + 7, 2, 20, "#d4a030");
+          }
+          for (let i = 0; i < 4; i++) {
+            rect(nx - 16, ny + bob + 7 + i * 6, 32, 2, "#d4a030");
+          }
+          ctx.globalAlpha = 1;
+          ctx.restore();
+          // Count label
+          const count = net.caught ? net.caught.length : 0;
+          ctx.save();
+          ctx.font = "bold 12px Consolas, monospace";
+          ctx.textAlign = "center";
+          rect(nx - 20, ny + bob + 28, 40, 16, "#16131a");
+          ctx.fillStyle = count > 0 ? "#ffd560" : "#c0c0c0";
+          ctx.fillText(`🕸${count}/${net.maxCapacity}`, nx, ny + bob + 40);
+          // Nearby harvest hint
+          const cx = player.inBoat ? boat.x : player.x;
+          if (Math.abs(net.x - cx) < 0.1) {
+            rect(nx - 48, ny + bob - 28, 96, 18, "#2c5c1e");
+            ctx.fillStyle = "#9fff85";
+            ctx.fillText("E — Зібрати улов", nx, ny + bob - 15);
+          }
+          ctx.restore();
+        });
+      }
+
+      function drawBoatSprite(w, h, now) {
+        const bx = Math.round(boat.x * w);
+        const by = Math.round(waterRect.y + waterRect.h * 0.35);
+        const s  = Math.round(w / 95);
+        // Boat hull shadow
+        rect(bx - 9 * s, by + 4 * s, 18 * s, 3 * s, "#16131a");
+        // Boat body
+        rect(bx - 8 * s, by,         16 * s, 4 * s, "#ba7046");
+        rect(bx - 6 * s, by + 3 * s, 12 * s, 3 * s, "#774333");
+        // Inner plank
+        rect(bx - 4 * s, by + 1 * s,  8 * s, 2 * s, "#a05a30");
+        // Oar
+        rect(bx + 5 * s, by - 3 * s,  2 * s, 8 * s, "#6d3f2a");
+        // Player IN boat
+        if (player.inBoat) {
+          rect(bx - 2 * s, by - 7 * s,  6 * s, 7 * s, "#c98048");
+          rect(bx - 2 * s, by - 11 * s, 5 * s, 5 * s, "#26384a");
+          rect(bx - 1 * s, by - 9  * s, 4 * s, 3 * s, "#f0b27a");
+          // tiny rod
+          const castLift = (fishing.phase === "waiting" || fishing.phase === "bite" || fishing.phase === "reeling") ? -s * 3 : 0;
+          rect(bx + 3 * s, by - 8  * s, s, 10 * s + castLift, "#4c2f20");
+        }
+      }
+
+      function drawPlayerSprite(w, h, now) {
+        if (player.inBoat) return; // player drawn inside boat already
+        const px = Math.round(player.x * w);
+        const py = waterRect.y + waterRect.h + h * 0.13;
+        const s  = w / 185;
+        const bob = Math.sin(now / 420) * s * 0.16;
+        const isWalking = keys.left || keys.right;
+        const legAnim = isWalking ? Math.sin(now / 120) * s * 0.8 : 0;
+        // Head
+        outlineRect(px - 1.1 * s, py - 8.5 * s + bob, 2.2 * s, 2.4 * s, "#d69b6f", "#16131a", 3);
+        rect(px - 0.95 * s, py - 8.75 * s + bob, 1.9 * s, 0.45 * s, "#3b2a22");
+        rect(px - 0.55 * s, py - 7.55 * s + bob, 0.35 * s, 0.35 * s, "#111");
+        rect(px + 0.45 * s, py - 7.55 * s + bob, 0.35 * s, 0.35 * s, "#111");
+        // Body
+        outlineRect(px - 1.25 * s, py - 5.95 * s + bob, 2.5 * s, 3.6 * s, "#356a9a", "#16131a", 3);
+        // Arms
+        rect(px - 2.0 * s, py - 5.6 * s + bob, 0.8 * s, 2.9 * s, "#d69b6f");
+        rect(px + 1.2 * s, py - 5.6 * s + bob, 0.8 * s, 2.9 * s, "#d69b6f");
+        // Legs
+        rect(px - 1.1 * s + legAnim, py - 2.25 * s, 0.85 * s, 3.2 * s, "#26344c");
+        rect(px + 0.25 * s - legAnim, py - 2.25 * s, 0.85 * s, 3.2 * s, "#26344c");
+        // Feet
+        rect(px - 1.45 * s + legAnim, py + 0.75 * s, 1.45 * s, 0.55 * s, "#1d1d24");
+        rect(px + 0.25 * s - legAnim, py + 0.75 * s, 1.45 * s, 0.55 * s, "#1d1d24");
+        // Rod
+        const rodDir = player.facing === "left" ? -1 : 1;
+        const rodX2 = player.inBoat ? px + rodDir * w * 0.18 : w * 0.68;
+        drawRod(px + 1.8 * s * rodDir, py - 5.2 * s + bob, rodX2, waterRect.y + waterRect.h * 0.05, rodTier().color);
       }
 
       function drawLavaVent(x, y, now) {
@@ -3207,25 +3506,6 @@
         rect(x - s * 0.72, y - s * 0.22, s * 1.44, s * 0.18, "#7e353e");
         rect(x - s * 0.58, y - s * 0.38, s * 1.16, s * 0.18, "#9e4852");
         rect(x - s * 0.36, y - s * 0.54, s * 0.72, s * 0.18, "#b4555a");
-      }
-
-      function drawPlayer(w, h, now) {
-        const x = w * 0.47;
-        const y = waterRect.y + waterRect.h + h * 0.13;
-        const s = w / 185;
-        const bob = Math.sin(now / 420) * s * 0.16;
-        outlineRect(x - 1.1 * s, y - 8.5 * s + bob, 2.2 * s, 2.4 * s, "#d69b6f", "#16131a", 3);
-        rect(x - 0.95 * s, y - 8.75 * s + bob, 1.9 * s, 0.45 * s, "#3b2a22");
-        rect(x - 0.55 * s, y - 7.55 * s + bob, 0.35 * s, 0.35 * s, "#111");
-        rect(x + 0.45 * s, y - 7.55 * s + bob, 0.35 * s, 0.35 * s, "#111");
-        outlineRect(x - 1.25 * s, y - 5.95 * s + bob, 2.5 * s, 3.6 * s, "#356a9a", "#16131a", 3);
-        rect(x - 2.0 * s, y - 5.6 * s + bob, 0.8 * s, 2.9 * s, "#d69b6f");
-        rect(x + 1.2 * s, y - 5.6 * s + bob, 0.8 * s, 2.9 * s, "#d69b6f");
-        rect(x - 1.1 * s, y - 2.25 * s, 0.85 * s, 3.2 * s, "#26344c");
-        rect(x + 0.25 * s, y - 2.25 * s, 0.85 * s, 3.2 * s, "#26344c");
-        rect(x - 1.45 * s, y + 0.75 * s, 1.45 * s, 0.55 * s, "#1d1d24");
-        rect(x + 0.25 * s, y + 0.75 * s, 1.45 * s, 0.55 * s, "#1d1d24");
-        drawRod(x + 1.8 * s, y - 5.2 * s + bob, w * 0.68, waterRect.y + waterRect.h * 0.05, rodTier().color);
       }
 
       function drawRod(x1, y1, x2, y2, color) {
