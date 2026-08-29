@@ -3,208 +3,3438 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Рибалка</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Кубічна Риболовля</title>
+  <style>
+    :root {
+      --ink: #16131a;
+      --panel: #342a37;
+      --panel-2: #4d3b42;
+      --panel-3: #69504f;
+      --paper: #f5e7bd;
+      --text: #fff5d2;
+      --muted: #d7c79c;
+      --gold: #ffd560;
+      --green: #68c35a;
+      --red: #df514a;
+      --blue: #59bde3;
+      --purple: #be85ff;
+      --shadow: 5px 5px 0 var(--ink);
+      font-family: "Courier New", Consolas, monospace;
+      color: var(--text);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #1e1a23;
+      overflow-x: hidden;
+      image-rendering: pixelated;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 4px solid var(--ink);
+      border-radius: 0;
+      background: #d9ad65;
+      color: #211715;
+      padding: 9px 12px;
+      box-shadow: 4px 4px 0 #704838;
+      cursor: pointer;
+      font-weight: 900;
+      transition: transform 0.07s steps(1), filter 0.08s steps(1);
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+    }
+
+    button:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 #704838;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      filter: grayscale(0.8) brightness(0.72);
+    }
+
+    select,
+    input {
+      border: 4px solid var(--ink);
+      border-radius: 0;
+      background: #201c28;
+      color: var(--text);
+      padding: 7px 9px;
+      font-weight: 800;
+    }
+
+    .game {
+      width: min(1500px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto minmax(430px, 1fr) auto;
+      background: #221d28;
+      border-left: 5px solid var(--ink);
+      border-right: 5px solid var(--ink);
+    }
+
+    .hud {
+      position: relative;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: minmax(260px, 1.2fr) minmax(320px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      background: var(--panel);
+      border-bottom: 5px solid var(--ink);
+      box-shadow: inset 0 -4px 0 #6f4d4e;
+    }
+
+    .status-card,
+    .rod-card,
+    .action-row,
+    .hotbar,
+    .mini-panel,
+    .menu-tabs,
+    .inventory-summary,
+    .slot-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .status-card,
+    .rod-card {
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+
+    .level-badge,
+    .coin-badge,
+    .shop-badge,
+    .world-badge,
+    .rod-name {
+      background: #201c28;
+      border: 4px solid var(--ink);
+      box-shadow: 3px 3px 0 #6f4d4e;
+      padding: 8px 10px;
+      white-space: nowrap;
+      font-weight: 900;
+    }
+
+    .hearts {
+      display: flex;
+      gap: 4px;
+      min-width: 92px;
+    }
+
+    .heart {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      background: var(--red);
+      box-shadow: 3px 0 0 #9e292b, 0 3px 0 #9e292b;
+      clip-path: polygon(50% 100%, 0 48%, 0 18%, 22% 0, 50% 18%, 78% 0, 100% 18%, 100% 48%);
+    }
+
+    .heart.empty {
+      background: #4b4248;
+      box-shadow: 3px 0 0 #28242c, 0 3px 0 #28242c;
+    }
+
+    .xp-wrap {
+      flex: 1;
+      min-width: 190px;
+      height: 30px;
+      border: 4px solid var(--ink);
+      background: #171821;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 3px 3px 0 #6f4d4e;
+    }
+
+    .xp-fill {
+      width: 0%;
+      height: 100%;
+      background:
+        repeating-linear-gradient(90deg, #368b3c 0 11px, #58c957 11px 19px, #e1ce55 19px 27px);
+      transition: width 0.25s steps(8);
+    }
+
+    .xp-wrap span {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fffbe8;
+      text-shadow: 2px 2px 0 #000;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .rod-meter {
+      width: min(260px, 100%);
+      height: 26px;
+      border: 4px solid var(--ink);
+      background: #1b1b23;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rod-meter > i {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(90deg, #73b94d 0 14px, #9fd85d 14px 22px);
+      transition: width 0.2s steps(8);
+    }
+
+    .rod-meter > span {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      color: white;
+      text-shadow: 2px 2px 0 #000;
+      font-weight: 900;
+    }
+
+    .icon-btn {
+      width: 43px;
+      height: 43px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      background: #202331;
+      color: var(--text);
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .scene {
+      position: relative;
+      min-height: 430px;
+      overflow: hidden;
+      background: #74bce0;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 430px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      touch-action: manipulation;
+    }
+
+    .hint,
+    .boss-banner,
+    .level-banner {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid var(--ink);
+      box-shadow: var(--shadow);
+      text-align: center;
+      pointer-events: none;
+      font-weight: 900;
+    }
+
+    .hint {
+      top: 14px;
+      max-width: min(780px, calc(100% - 22px));
+      padding: 10px 14px;
+      background: #fff4c5;
+      color: #251716;
+      line-height: 1.25;
+    }
+
+    .boss-banner {
+      top: 72px;
+      padding: 12px 18px;
+      background: #8f2429;
+      color: #ffe789;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      animation: bannerPop 0.8s steps(4) infinite alternate;
+    }
+
+    .level-banner {
+      top: 80px;
+      padding: 14px 18px;
+      background: #233450;
+      color: #ffe88a;
+      min-width: min(440px, calc(100% - 24px));
+      animation: levelGlow 0.95s steps(6) infinite alternate;
+    }
+
+    .level-banner strong {
+      display: block;
+      font-size: 25px;
+      margin-bottom: 5px;
+    }
+
+    @keyframes bannerPop {
+      from { transform: translateX(-50%) scale(0.96); }
+      to { transform: translateX(-50%) scale(1.04); }
+    }
+
+    @keyframes levelGlow {
+      from { filter: brightness(1); }
+      to { filter: brightness(1.25); }
+    }
+
+    .minigame {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      width: min(620px, calc(100% - 24px));
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      background: rgba(47, 39, 49, 0.96);
+      border: 5px solid var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    .mini-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-weight: 900;
+    }
+
+    .bar {
+      height: 26px;
+      border: 4px solid var(--ink);
+      background: #181822;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      transition: width 0.08s linear;
+    }
+
+    .progress-bar > i {
+      background: repeating-linear-gradient(90deg, #2f85cd 0 11px, #69d1f2 11px 19px);
+    }
+
+    .durability-bar > i {
+      background: repeating-linear-gradient(90deg, #4ca342 0 11px, #81cf61 11px 19px);
+    }
+
+    .strength-bar > i {
+      background: repeating-linear-gradient(90deg, #b33a3f 0 11px, #f47655 11px 19px);
+    }
+
+    .tension {
+      height: 32px;
+      border: 4px solid var(--ink);
+      display: grid;
+      grid-template-columns: 23% 54% 23%;
+      position: relative;
+      overflow: hidden;
+      background: #181822;
+    }
+
+    .tension .bad {
+      background: #b9373c;
+    }
+
+    .tension .good {
+      background: #5fbf58;
+    }
+
+    .needle {
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      width: 6px;
+      height: 38px;
+      background: #fff7d4;
+      box-shadow: 3px 0 0 var(--ink);
+      transition: left 0.04s linear;
+    }
+
+    .dock {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      background: var(--panel);
+      border-top: 5px solid var(--ink);
+      box-shadow: inset 0 4px 0 #6f4d4e;
+    }
+
+    .hotbar {
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .hot-slot,
+    .inv-slot,
+    .enchant-slot {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      border: 4px solid var(--ink);
+      background: #7d725f;
+      box-shadow: inset 4px 4px 0 #a99b7c, inset -4px -4px 0 #4c4437;
+      display: grid;
+      place-items: center;
+      color: #17151b;
+      font-weight: 900;
+    }
+
+    .hot-slot.active {
+      outline: 4px solid #fff1a4;
+      z-index: 1;
+    }
+
+    .hot-slot small,
+    .inv-slot small {
+      position: absolute;
+      right: 3px;
+      bottom: 1px;
+      color: white;
+      text-shadow: 2px 2px 0 #000;
+      font-size: 12px;
+    }
+
+    .message {
+      min-width: 230px;
+      border: 4px solid var(--ink);
+      background: #201c28;
+      padding: 10px 12px;
+      box-shadow: 3px 3px 0 #6f4d4e;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    dialog {
+      width: min(980px, calc(100% - 22px));
+      max-height: min(820px, calc(100vh - 22px));
+      padding: 0;
+      border: 6px solid var(--ink);
+      border-radius: 0;
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 13px;
+      background: #7d4a48;
+      border-bottom: 5px solid var(--ink);
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .modal-body {
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+      max-height: calc(100vh - 130px);
+      overflow: auto;
+    }
+
+    .menu-tabs {
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-bottom: 5px solid var(--ink);
+      background: #42333c;
+    }
+
+    .menu-tabs button {
+      background: #202331;
+      color: var(--text);
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .menu-tabs button.active {
+      border-color: var(--gold);
+      color: #fff0a6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 10px;
+    }
+
+    .wide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+
+    .card {
+      border: 4px solid var(--ink);
+      background: var(--paper);
+      color: #211715;
+      padding: 12px;
+      box-shadow: 4px 4px 0 #704838;
+      display: grid;
+      gap: 8px;
+      min-height: 112px;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .card p {
+      margin: 0;
+      color: #594037;
+      line-height: 1.25;
+      font-size: 14px;
+    }
+
+    .card .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .card.done {
+      background: #d7efc6;
+    }
+
+    .card.locked {
+      filter: grayscale(0.75) brightness(0.82);
+    }
+
+    .progress-mini {
+      height: 22px;
+      border: 4px solid var(--ink);
+      background: #171821;
+      overflow: hidden;
+    }
+
+    .progress-mini > i {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: repeating-linear-gradient(90deg, #4da7da 0 10px, #79e0f0 10px 18px);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #231d20;
+      color: #fff5d2;
+      border: 3px solid var(--ink);
+      padding: 4px 6px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .inventory-summary {
+      flex-wrap: wrap;
+      background: #251f2b;
+      border: 4px solid var(--ink);
+      padding: 10px;
+    }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .dex-card {
+      min-height: 150px;
+    }
+
+    .dex-card.unknown {
+      background: #8a806c;
+      color: #221b1b;
+    }
+
+    .aquarium-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+    }
+
+    .save-textarea {
+      width: 100%;
+      min-height: 170px;
+      resize: vertical;
+      border: 4px solid var(--ink);
+      background: #171821;
+      color: var(--text);
+      padding: 10px;
+      font: 13px/1.35 "Courier New", Consolas, monospace;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .inv-slot {
+      width: 100%;
+      aspect-ratio: 1;
+      height: auto;
+      min-height: 68px;
+      cursor: grab;
+      padding: 3px;
+    }
+
+    .inv-slot:active {
+      cursor: grabbing;
+    }
+
+    .inv-slot .label {
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      right: 4px;
+      color: white;
+      font-size: 10px;
+      line-height: 1.05;
+      text-shadow: 2px 2px 0 #000;
+      overflow-wrap: anywhere;
+    }
+
+    .drop-zone {
+      border: 4px dashed #f2dc91;
+      background: #2b2630;
+      padding: 12px;
+      min-height: 76px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .drop-zone.drag-over,
+    .enchant-slot.drag-over,
+    .hot-slot.drag-over {
+      outline: 4px solid #fff3a4;
+    }
+
+    .enchant-layout,
+    .grind-layout {
+      display: grid;
+      grid-template-columns: minmax(230px, 0.9fr) minmax(260px, 1.1fr);
+      gap: 14px;
+    }
+
+    .slot-row {
+      flex-wrap: wrap;
+    }
+
+    .enchant-slot {
+      width: 112px;
+      height: 76px;
+      text-align: center;
+      padding: 6px;
+      color: #211715;
+      background: #8e8069;
+    }
+
+    .toast-layer {
+      position: fixed;
+      right: 16px;
+      top: 16px;
+      z-index: 30;
+      display: grid;
+      gap: 10px;
+      pointer-events: none;
+      max-width: min(390px, calc(100% - 32px));
+    }
+
+    .toast {
+      border: 4px solid var(--ink);
+      background: #fff2bc;
+      color: #241716;
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      font-weight: 900;
+      animation: toastIn 0.25s steps(3), toastOut 0.25s steps(3) 3.2s forwards;
+    }
+
+    @keyframes toastIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes toastOut {
+      to { transform: translateX(20px); opacity: 0; }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .pixel-rod,
+    .pixel-fish,
+    .pixel-enchant,
+    .pixel-coin,
+    .pixel-kit,
+    .pixel-resource,
+    .pixel-chest {
+      display: inline-block;
+      position: relative;
+      image-rendering: pixelated;
+    }
+
+    .pixel-rod {
+      width: 38px;
+      height: 38px;
+    }
+
+    .pixel-rod::before {
+      content: "";
+      position: absolute;
+      left: 17px;
+      top: 2px;
+      width: 6px;
+      height: 34px;
+      background: var(--rod-color, #8a5634);
+      box-shadow: 6px 4px 0 var(--rod-color, #8a5634), 12px 10px 0 #d8e8ff, 12px 16px 0 #d8e8ff, 6px 24px 0 #30242b;
+      transform: rotate(37deg);
+      transform-origin: center;
+    }
+
+    .pixel-fish {
+      width: 44px;
+      height: 30px;
+      --fish: #78bd62;
+      --accent: #23482a;
+    }
+
+    .pixel-fish::before {
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 10px;
+      width: 24px;
+      height: 10px;
+      background: var(--fish);
+      box-shadow:
+        -5px 3px 0 var(--fish),
+        5px -4px 0 var(--fish),
+        20px 2px 0 #111,
+        12px 3px 0 var(--accent);
+    }
+
+    .pixel-fish::after {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 7px;
+      width: 11px;
+      height: 18px;
+      background:
+        linear-gradient(135deg, transparent 0 33%, var(--accent) 34% 66%, transparent 67%);
+    }
+
+    .pixel-enchant {
+      width: 34px;
+      height: 34px;
+    }
+
+    .pixel-enchant::before {
+      content: "";
+      position: absolute;
+      left: 13px;
+      top: 1px;
+      width: 8px;
+      height: 32px;
+      background: #93f6ff;
+      box-shadow: -10px 12px 0 #be85ff, 10px 12px 0 #fff091, 0 12px 0 #ffffff;
+    }
+
+    .pixel-coin {
+      width: 34px;
+      height: 34px;
+      background: #f0b83c;
+      border: 4px solid #7b4b1c;
+      box-shadow: inset 5px 0 0 #ffe385, inset -5px 0 0 #bc7429;
+      border-radius: 0;
+    }
+
+    .pixel-kit {
+      width: 36px;
+      height: 32px;
+      background: #b7443f;
+      border: 4px solid #321a1e;
+      box-shadow: inset 0 9px 0 #f3d3a3;
+    }
+
+    .pixel-resource {
+      width: 34px;
+      height: 34px;
+      background: #8ec7d6;
+      border: 4px solid #26384a;
+      transform: rotate(45deg);
+    }
+
+    .pixel-chest {
+      width: 38px;
+      height: 32px;
+      background: #a9673f;
+      border: 4px solid #2a171a;
+      box-shadow: inset 0 10px 0 #d99b5a;
+    }
+
+    .rarity-common { color: #edf0e6; }
+    .rarity-uncommon { color: #82df87; }
+    .rarity-rare { color: #6dc9ff; }
+    .rarity-epic { color: #d89bff; }
+    .rarity-legendary { color: #ffe078; }
+
+    @media (max-width: 950px) {
+      .hud {
+        grid-template-columns: 1fr;
+      }
+
+      .action-row {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .dock {
+        grid-template-columns: 1fr;
+      }
+
+      .hotbar {
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .enchant-layout,
+      .grind-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .game {
+        border: 0;
+      }
+
+      .hud,
+      .dock {
+        padding: 8px;
+      }
+
+      .level-badge,
+      .coin-badge,
+      .shop-badge,
+      .rod-name,
+      .message,
+      .hint {
+        font-size: 13px;
+      }
+
+      .hot-slot {
+        width: 50px;
+        height: 50px;
+      }
+
+      .minigame {
+        bottom: 8px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-  <main class="game-shell">
-    <section class="topbar" aria-label="Статус гравця">
-      <div class="player-block">
-        <span class="badge">Рівень <strong id="levelValue">1</strong></span>
+  <main class="game">
+    <section class="hud" aria-label="Стан гравця">
+      <div class="status-card">
+        <div class="hearts" id="hearts"></div>
+        <span class="level-badge">LVL <strong id="levelValue">1</strong></span>
         <div class="xp-wrap" aria-label="Досвід">
-          <div id="xpFill" class="xp-fill"></div>
+          <div class="xp-fill" id="xpFill"></div>
           <span id="xpText">0 / 100 XP</span>
         </div>
       </div>
-      <div class="resource-row">
-        <span class="stat"><span aria-hidden="true">●</span> <strong id="coinValue">75</strong> монет</span>
-        <span class="stat" id="weatherValue">Сонячно</span>
-        <span class="stat" id="timeValue">☀ День</span>
-        <span class="stat">Глибина: <strong id="depthValue">Мілко</strong></span>
-      </div>
-      <div class="quick-actions">
-        <button id="questsButton" class="icon-button" title="Квести" aria-label="Квести">!</button>
-        <button id="mapButton" class="icon-button" title="Локації" aria-label="Локації">⌂</button>
-        <button id="trophyButton" class="icon-button" title="Трофеї" aria-label="Трофеї">★</button>
-        <button id="aquariumButton" class="icon-button" title="Акваріум" aria-label="Акваріум">≈</button>
-        <button id="craftButton" class="icon-button" title="Крафт" aria-label="Крафт">⚒</button>
-        <button id="achievementsButton" class="icon-button" title="Досягнення" aria-label="Досягнення">✓</button>
-        <button id="inventoryButton" class="icon-button" title="Інвентар (E)" aria-label="Інвентар">🎒</button>
-        <button id="dexButton" class="icon-button" title="Fish Dex (I)" aria-label="Fish Dex">📖</button>
-        <button id="saveButton" class="icon-button" title="Зберегти" aria-label="Зберегти">💾</button>
-      </div>
-    </section>
 
-    <section class="scene-wrap">
-      <canvas id="gameCanvas" width="1280" height="720" aria-label="Озеро для риболовлі"></canvas>
-      <div id="hint" class="hint">Клікни або тапни по озеру, щоб закинути вудку</div>
-      <div id="bitePrompt" class="bite-prompt hidden">!</div>
-      <div id="reelPanel" class="reel-panel hidden">
-        <span>Натяг лінії</span>
-        <div class="tension-track">
-          <div class="danger left"></div>
-          <div class="safe"></div>
-          <div class="danger right"></div>
-          <div id="tensionNeedle" class="tension-needle"></div>
+      <div class="rod-card">
+        <span class="rod-name" id="rodName">Вудочка</span>
+        <div class="rod-meter" aria-label="Міцність вудочки">
+          <i id="rodDurabilityFill"></i>
+          <span id="rodDurabilityText">100 / 100</span>
         </div>
-        <small>Утримуй пробіл або кнопку, тримай шкалу в зеленій зоні</small>
-        <button id="holdReelButton">Тягнути</button>
       </div>
-      <div class="buildings">
-        <button id="shopButton" class="building shop">Магазин</button>
-        <button id="enchantButton" class="building enchant">Чари</button>
-        <button id="sleepButton" class="building sleep">Сон</button>
+
+      <div class="action-row">
+        <span class="coin-badge"><strong id="coinValue">0</strong> Coins</span>
+        <span class="shop-badge">Shop LVL <strong id="shopLevelValue">1</strong></span>
+        <span class="world-badge" id="locationBadge">Лісове озеро</span>
+        <span class="world-badge" id="weatherBadge">Сонячно</span>
+        <span class="world-badge" id="timeBadge">День</span>
+        <button class="icon-btn" id="inventoryButton" title="Інвентар" aria-label="Інвентар">I</button>
+        <button class="icon-btn" id="shopButton" title="Магазин" aria-label="Магазин">$</button>
+        <button class="icon-btn" id="grindstoneButton" title="Точило" aria-label="Точило">G</button>
+        <button class="icon-btn" id="locationButton" title="Локації" aria-label="Локації">M</button>
+        <button class="icon-btn" id="dexButton" title="Fish Dex" aria-label="Fish Dex">D</button>
+        <button class="icon-btn" id="questButton" title="Квести" aria-label="Квести">Q</button>
+        <button class="icon-btn" id="craftButton" title="Крафт" aria-label="Крафт">C</button>
+        <button class="icon-btn" id="aquariumButton" title="Акваріум" aria-label="Акваріум">A</button>
+        <button class="icon-btn" id="achievementsButton" title="Досягнення" aria-label="Досягнення">*</button>
+        <button class="icon-btn" id="saveButton" title="Зберегти" aria-label="Зберегти">S</button>
+        <button class="icon-btn" id="saveToolsButton" title="Імпорт / експорт" aria-label="Імпорт / експорт">IO</button>
       </div>
     </section>
 
-    <section class="control-dock" aria-label="Панель керування">
-      <div class="bait-panel">
-        <span>Наживка</span>
-        <div id="baitChoices" class="bait-choices"></div>
+    <section class="scene" aria-label="Берег озера">
+      <canvas id="gameCanvas" width="1280" height="720"></canvas>
+      <div class="hint" id="hint">Готово до закидання</div>
+      <div class="boss-banner hidden" id="bossBanner">⚠ РИБА-БОС!</div>
+      <div class="level-banner hidden" id="levelBanner"></div>
+
+      <div class="minigame hidden" id="minigame">
+        <div class="mini-top">
+          <span id="fishName">Риба</span>
+          <span>Сила: <strong id="fishStrength">0</strong></span>
+        </div>
+        <div class="bar strength-bar" aria-label="Сила риби"><i id="strengthFill"></i></div>
+        <div class="tension" aria-label="Натяг волосіні">
+          <div class="bad"></div>
+          <div class="good"></div>
+          <div class="bad"></div>
+          <div class="needle" id="tensionNeedle"></div>
+        </div>
+        <div class="bar progress-bar" aria-label="Прогрес витягування"><i id="catchProgressFill"></i></div>
+        <div class="bar durability-bar" aria-label="Міцність вудочки"><i id="miniDurabilityFill"></i></div>
+        <button id="reelButton">ТЯГНУТИ</button>
       </div>
-      <div class="mobile-controls">
-        <button id="castButton">Закинути</button>
-        <button id="depthButton">Глибше</button>
-      </div>
-      <div id="messageLog" class="message-log" aria-live="polite">Ласкаво просимо на озеро.</div>
+    </section>
+
+    <section class="dock" aria-label="Панель дій">
+      <button id="castButton">Закинути</button>
+      <div class="hotbar" id="hotbar"></div>
+      <div class="message" id="message">Персонаж стоїть на березі. Вода попереду.</div>
     </section>
   </main>
-  <div id="toastLayer" class="toast-layer" aria-live="polite"></div>
 
-  <dialog id="inventoryModal" class="modal">
+  <dialog id="inventoryModal">
     <div class="modal-head">
       <h2>Інвентар</h2>
-      <button data-close="inventoryModal" class="icon-button" aria-label="Закрити">×</button>
+      <button class="icon-btn" data-close="inventoryModal" aria-label="Закрити">X</button>
     </div>
-    <div class="modal-tools">
-      <label>Сортувати
-        <select id="inventorySort">
-          <option value="newest">нові спочатку</option>
-          <option value="weight">за вагою</option>
-          <option value="rarity">за рідкістю</option>
-          <option value="type">за видом</option>
-        </select>
-      </label>
-      <button id="sellAllButton">Продати все</button>
-      <span id="inventoryCapacity">0 / 24</span>
+    <div class="modal-body">
+      <div class="inventory-summary" id="inventorySummary"></div>
+      <div class="enchant-layout">
+        <div class="card">
+          <h3>Вибрана вудочка</h3>
+          <p id="selectedRodDetails"></p>
+          <div class="slot-row" id="rodEnchantSlots"></div>
+        </div>
+        <div class="drop-zone" id="sellDropZone">Перетягни сюди рибу, щоб продати</div>
+      </div>
+      <div class="inventory-grid" id="inventoryGrid"></div>
     </div>
-    <div id="inventoryList" class="item-grid"></div>
   </dialog>
 
-  <dialog id="dexModal" class="modal wide">
-    <div class="modal-head">
-      <h2>Fish Dex <span id="dexProgress">0/20</span></h2>
-      <button data-close="dexModal" class="icon-button" aria-label="Закрити">×</button>
-    </div>
-    <div class="modal-tools">
-      <label>Рідкість
-        <select id="dexRarityFilter">
-          <option value="all">усі</option>
-          <option value="common">звичайні</option>
-          <option value="uncommon">незвичайні</option>
-          <option value="rare">рідкісні</option>
-          <option value="epic">епічні</option>
-          <option value="legendary">легендарні</option>
-        </select>
-      </label>
-      <label>Статус
-        <select id="dexStatusFilter">
-          <option value="all">усі</option>
-          <option value="caught">спіймані</option>
-          <option value="missing">невідомі</option>
-        </select>
-      </label>
-    </div>
-    <div id="dexList" class="dex-grid"></div>
-  </dialog>
-
-  <dialog id="shopModal" class="modal wide">
+  <dialog id="shopModal">
     <div class="modal-head">
       <h2>Магазин</h2>
-      <button data-close="shopModal" class="icon-button" aria-label="Закрити">×</button>
+      <button class="icon-btn" data-close="shopModal" aria-label="Закрити">X</button>
     </div>
-    <div class="shop-tabs">
-      <button data-tab="rods" class="active">Вудки</button>
-      <button data-tab="bait">Наживка</button>
-      <button data-tab="storage">Сховище</button>
+    <div class="menu-tabs" id="shopTabs">
+      <button data-tab="rods" class="active">Вудочки</button>
+      <button data-tab="enchants">Зачарування</button>
+      <button data-tab="upgrades">Покращення</button>
     </div>
-    <div id="shopList" class="shop-list"></div>
+    <div class="modal-body">
+      <div class="inventory-summary">
+        <span class="tag">Coins: <strong id="shopCoins">0</strong></span>
+        <span class="tag">Shop LVL: <strong id="shopLevelPanel">1</strong> / 100</span>
+      </div>
+      <div class="grid" id="shopGrid"></div>
+    </div>
   </dialog>
 
-  <dialog id="enchantModal" class="modal">
+  <dialog id="grindstoneModal">
     <div class="modal-head">
-      <h2>Будинок зачарувань</h2>
-      <button data-close="enchantModal" class="icon-button" aria-label="Закрити">×</button>
+      <h2>Точило</h2>
+      <button class="icon-btn" data-close="grindstoneModal" aria-label="Закрити">X</button>
     </div>
-    <div id="enchantList" class="shop-list"></div>
+    <div class="modal-body grind-layout">
+      <div class="card">
+        <h3>Слоти зачарувань</h3>
+        <p>Знімай, видаляй або замінюй зачарування. Частина ресурсів повертається.</p>
+        <div class="slot-row" id="grindSlots"></div>
+      </div>
+      <div class="card">
+        <h3>Об'єднання вудочок</h3>
+        <p id="combineInfo"></p>
+        <button id="combineButton">Об'єднати сумісну вудочку</button>
+      </div>
+      <div class="card">
+        <h3>Ресурси</h3>
+        <div class="inventory-summary" id="resourceSummary"></div>
+      </div>
+      <div class="grid" id="grindEnchantGrid"></div>
+    </div>
   </dialog>
 
-  <dialog id="sleepModal" class="modal">
-    <div class="modal-head">
-      <h2>Будинок сну</h2>
-      <button data-close="sleepModal" class="icon-button" aria-label="Закрити">×</button>
-    </div>
-    <div class="sleep-options">
-      <button data-sleep="morning">До ранку</button>
-      <button data-sleep="noon">До дня</button>
-      <button data-sleep="evening">До вечора</button>
-      <button data-sleep="night">До ночі</button>
-    </div>
-  </dialog>
-
-  <dialog id="questsModal" class="modal wide">
-    <div class="modal-head">
-      <h2>Квести</h2>
-      <button data-close="questsModal" class="icon-button" aria-label="Закрити">×</button>
-    </div>
-    <div id="questsList" class="shop-list"></div>
-  </dialog>
-
-  <dialog id="trophyModal" class="modal wide">
-    <div class="modal-head">
-      <h2>Трофейна кімната</h2>
-      <button data-close="trophyModal" class="icon-button" aria-label="Закрити">×</button>
-    </div>
-    <div id="trophyList" class="dex-grid"></div>
-  </dialog>
-
-  <dialog id="mapModal" class="modal wide">
+  <dialog id="locationModal">
     <div class="modal-head">
       <h2>Локації</h2>
-      <button data-close="mapModal" class="icon-button" aria-label="Закрити">×</button>
+      <button class="icon-btn" data-close="locationModal" aria-label="Закрити">X</button>
     </div>
-    <div id="locationList" class="shop-list"></div>
+    <div class="modal-body">
+      <div class="inventory-summary" id="locationSummary"></div>
+      <div class="wide-grid" id="locationGrid"></div>
+    </div>
   </dialog>
 
-  <dialog id="aquariumModal" class="modal wide">
+  <dialog id="dexModal">
     <div class="modal-head">
-      <h2>Акваріум</h2>
-      <button data-close="aquariumModal" class="icon-button" aria-label="Закрити">×</button>
+      <h2>Fish Dex</h2>
+      <button class="icon-btn" data-close="dexModal" aria-label="Закрити">X</button>
     </div>
-    <div class="modal-tools">
-      <span id="aquariumBonus">Бонус: 0%</span>
-      <button id="collectAquariumButton">Зібрати прибуток</button>
+    <div class="menu-tabs" id="dexTabs">
+      <button data-filter="all" class="active">Всі</button>
+      <button data-filter="caught">Спіймані</button>
+      <button data-filter="missing">Невідомі</button>
     </div>
-    <div id="aquariumList" class="dex-grid"></div>
+    <div class="modal-body">
+      <div class="inventory-summary" id="dexSummary"></div>
+      <div class="wide-grid" id="dexGrid"></div>
+    </div>
   </dialog>
 
-  <dialog id="craftModal" class="modal wide">
+  <dialog id="questModal">
+    <div class="modal-head">
+      <h2>Квести</h2>
+      <button class="icon-btn" data-close="questModal" aria-label="Закрити">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="inventory-summary" id="questSummary"></div>
+      <div class="wide-grid" id="questGrid"></div>
+    </div>
+  </dialog>
+
+  <dialog id="craftModal">
     <div class="modal-head">
       <h2>Крафт</h2>
-      <button data-close="craftModal" class="icon-button" aria-label="Закрити">×</button>
+      <button class="icon-btn" data-close="craftModal" aria-label="Закрити">X</button>
     </div>
-    <div id="resourceBar" class="resource-bank"></div>
-    <div id="craftList" class="shop-list"></div>
+    <div class="modal-body">
+      <div class="inventory-summary" id="craftResourceSummary"></div>
+      <div class="wide-grid" id="craftGrid"></div>
+    </div>
   </dialog>
 
-  <dialog id="achievementsModal" class="modal wide">
+  <dialog id="aquariumModal">
+    <div class="modal-head">
+      <h2>Акваріум</h2>
+      <button class="icon-btn" data-close="aquariumModal" aria-label="Закрити">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="inventory-summary" id="aquariumSummary"></div>
+      <button id="collectAquariumButton">Зібрати прибуток</button>
+      <div class="aquarium-grid" id="aquariumGrid"></div>
+    </div>
+  </dialog>
+
+  <dialog id="achievementsModal">
     <div class="modal-head">
       <h2>Досягнення</h2>
-      <button data-close="achievementsModal" class="icon-button" aria-label="Закрити">×</button>
+      <button class="icon-btn" data-close="achievementsModal" aria-label="Закрити">X</button>
     </div>
-    <div id="achievementsList" class="dex-grid"></div>
+    <div class="modal-body">
+      <div class="inventory-summary" id="achievementSummary"></div>
+      <div class="wide-grid" id="achievementGrid"></div>
+    </div>
   </dialog>
 
-  <script src="script.js"></script>
+  <dialog id="saveToolsModal">
+    <div class="modal-head">
+      <h2>Збереження</h2>
+      <button class="icon-btn" data-close="saveToolsModal" aria-label="Закрити">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="two-col">
+        <button id="exportSaveButton">Експорт save</button>
+        <button id="importSaveButton">Імпорт save</button>
+      </div>
+      <textarea id="saveText" class="save-textarea" spellcheck="false" placeholder="Тут буде код збереження"></textarea>
+    </div>
+  </dialog>
+
+  <div class="toast-layer" id="toastLayer" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_KEY = "cube-fishing-html5-save-v1";
+      const MAX_LEVEL = 100;
+      const SAFE_TENSION_MIN = 0.23;
+      const SAFE_TENSION_MAX = 0.77;
+      const DAY_LENGTH = 180000;
+
+      const TIME_SEGMENTS = [
+        { id: "dawn", name: "Ранок", start: 0, end: 0.22 },
+        { id: "day", name: "День", start: 0.22, end: 0.62 },
+        { id: "dusk", name: "Вечір", start: 0.62, end: 0.78 },
+        { id: "night", name: "Ніч", start: 0.78, end: 1 }
+      ];
+
+      const WEATHER = {
+        sunny: { id: "sunny", name: "Сонячно", bite: 1, rare: 1, color: "#fff2a5" },
+        rain: { id: "rain", name: "Дощ", bite: 1.32, rare: 1.18, color: "#98bfd1" },
+        fog: { id: "fog", name: "Туман", bite: 0.92, rare: 1.36, color: "#d5e5e5" },
+        heat: { id: "heat", name: "Спека", bite: 0.78, rare: 0.95, color: "#ffd091" }
+      };
+
+      const ROD_TIERS = {
+        ordinary: {
+          id: "ordinary",
+          name: "Звичайна вудочка",
+          short: "Звичайна",
+          cost: 0,
+          shop: 1,
+          durability: 100,
+          power: 1,
+          speed: 1,
+          slots: 1,
+          color: "#8a5634"
+        },
+        improved: {
+          id: "improved",
+          name: "Покращена вудочка",
+          short: "Покращена",
+          cost: 450,
+          shop: 5,
+          durability: 150,
+          power: 1.22,
+          speed: 1.15,
+          slots: 2,
+          color: "#b98152"
+        },
+        rare: {
+          id: "rare",
+          name: "Рідкісна вудочка",
+          short: "Рідкісна",
+          cost: 1600,
+          shop: 18,
+          durability: 230,
+          power: 1.55,
+          speed: 1.35,
+          slots: 3,
+          color: "#4ba2e0"
+        },
+        epic: {
+          id: "epic",
+          name: "Епічна вудочка",
+          short: "Епічна",
+          cost: 5200,
+          shop: 42,
+          durability: 340,
+          power: 2.05,
+          speed: 1.62,
+          slots: 3,
+          color: "#b05cff"
+        },
+        legendary: {
+          id: "legendary",
+          name: "Легендарна вудочка",
+          short: "Легендарна",
+          cost: 15000,
+          shop: 70,
+          durability: 520,
+          power: 2.9,
+          speed: 2.1,
+          slots: 3,
+          color: "#ffd560"
+        }
+      };
+
+      // Система зачарувань: ефекти, магазин, слоти та застосування до вудочок.
+      const ENCHANTS = {
+        luck: {
+          id: "luck",
+          name: "Удача",
+          desc: "Більший шанс рідкісної риби",
+          cost: 360,
+          shop: 3,
+          color: "#8fe35e"
+        },
+        strength: {
+          id: "strength",
+          name: "Сила",
+          desc: "Швидше витягування сильної риби",
+          cost: 440,
+          shop: 7,
+          color: "#ff7d59"
+        },
+        wealth: {
+          id: "wealth",
+          name: "Багатство",
+          desc: "Більше монет за улов",
+          cost: 520,
+          shop: 12,
+          color: "#ffe06c"
+        },
+        steady: {
+          id: "steady",
+          name: "Спокій",
+          desc: "Натяг повільніше виходить з безпечної зони",
+          cost: 680,
+          shop: 20,
+          color: "#73d9ff"
+        },
+        titan: {
+          id: "titan",
+          name: "Титан",
+          desc: "Вудочка втрачає менше міцності",
+          cost: 1200,
+          shop: 35,
+          color: "#c7b8ff"
+        }
+      };
+
+      const RARITY = {
+        common: { label: "звичайна", weight: 72, color: "#dce4df", mult: 1 },
+        uncommon: { label: "незвичайна", weight: 35, color: "#82df87", mult: 1.6 },
+        rare: { label: "рідкісна", weight: 16, color: "#6dc9ff", mult: 2.8 },
+        epic: { label: "епічна", weight: 6, color: "#d89bff", mult: 5 },
+        legendary: { label: "легендарна", weight: 1.9, color: "#ffe078", mult: 9 }
+      };
+
+      const FISH = [
+        { id: "perch", name: "Окунь", rarity: "common", strength: 16, xp: 22, coins: 20, min: 0.2, max: 1.4, locations: ["lake", "river"], times: ["dawn", "day", "dusk"], weather: ["sunny", "rain", "fog"], color: "#75b94d", accent: "#2d4f2b", desc: "Часто тримається біля трави та мілководдя." },
+        { id: "crucian", name: "Карась", rarity: "common", strength: 14, xp: 20, coins: 18, min: 0.2, max: 1.8, locations: ["lake", "marsh"], times: ["day", "dusk"], weather: ["sunny", "heat", "fog"], color: "#caa057", accent: "#7d5c2f", desc: "Любить теплу воду й тихі місця." },
+        { id: "roach", name: "Плітка", rarity: "common", strength: 12, xp: 17, coins: 15, min: 0.1, max: 0.8, locations: ["lake", "river"], times: ["dawn", "day"], weather: ["sunny", "rain"], color: "#c7d4d7", accent: "#d85f61", desc: "Мала срібляста риба, добра для старту." },
+        { id: "carp", name: "Короп", rarity: "uncommon", strength: 34, xp: 48, coins: 48, min: 1.4, max: 8.2, locations: ["lake", "marsh"], times: ["day", "dusk"], weather: ["sunny", "heat"], color: "#b9823d", accent: "#ffe09a", desc: "Сильний береговий трофей." },
+        { id: "pike", name: "Щука", rarity: "uncommon", strength: 40, xp: 54, coins: 58, min: 1.0, max: 6.8, locations: ["lake", "river"], times: ["dawn", "day"], weather: ["rain", "fog"], color: "#657f42", accent: "#d1e06e", desc: "Хижак, який атакує різкими ривками." },
+        { id: "tench", name: "Лин", rarity: "uncommon", strength: 38, xp: 58, coins: 62, min: 0.7, max: 4.8, locations: ["marsh"], times: ["dawn", "dusk"], weather: ["heat", "fog"], color: "#76954d", accent: "#d7cd75", desc: "Болотяна риба з густої трави." },
+        { id: "eel", name: "Вугор", rarity: "rare", strength: 66, xp: 108, coins: 132, min: 0.6, max: 5.5, locations: ["marsh", "moonbay"], times: ["night"], weather: ["rain", "fog"], color: "#2f4a3f", accent: "#9fcb81", desc: "Ковзкий нічний улов." },
+        { id: "trout", name: "Форель", rarity: "rare", strength: 56, xp: 90, coins: 105, min: 0.7, max: 3.5, locations: ["river"], times: ["dawn", "day"], weather: ["rain", "sunny"], color: "#7bb9c7", accent: "#ff7771", desc: "Швидка риба чистої течії." },
+        { id: "zander", name: "Судак", rarity: "rare", strength: 68, xp: 118, coins: 150, min: 1.0, max: 7.8, locations: ["river", "moonbay"], times: ["dusk", "night"], weather: ["rain", "fog"], color: "#9eb1a1", accent: "#313f36", desc: "Полює в сутінках на глибших місцях." },
+        { id: "catfish", name: "Сом", rarity: "rare", strength: 72, xp: 120, coins: 145, min: 4.0, max: 28, locations: ["marsh", "moonbay"], times: ["night"], weather: ["heat", "rain"], color: "#59646d", accent: "#e1c394", desc: "Велетень дна, що тягне повільно й важко." },
+        { id: "sturgeon", name: "Осетер", rarity: "epic", strength: 92, xp: 210, coins: 290, min: 3.0, max: 24, locations: ["river", "moonbay"], times: ["night", "dawn"], weather: ["rain", "fog"], color: "#808b96", accent: "#d6ccb4", desc: "Давній мешканець холодної глибини." },
+        { id: "crystal", name: "Кристальна форель", rarity: "epic", strength: 98, xp: 245, coins: 330, min: 0.5, max: 2.2, locations: ["river", "moonbay"], times: ["night"], weather: ["fog", "rain"], color: "#bff6ff", accent: "#a58cff", desc: "Напівпрозора риба, що сяє вночі." },
+        { id: "ember", name: "Жар-карась", rarity: "epic", strength: 104, xp: 270, coins: 390, min: 0.4, max: 2.4, locations: ["lava"], times: ["day", "dusk"], weather: ["heat", "sunny"], color: "#ff764d", accent: "#ffd269", desc: "Теплолюбна риба лавового ставка." },
+        { id: "moon_eel", name: "Місячний вугор", rarity: "legendary", strength: 132, xp: 520, coins: 900, min: 1.0, max: 8.5, locations: ["moonbay"], times: ["night"], weather: ["fog", "rain"], color: "#5362a8", accent: "#fff3b0", desc: "Виходить лише під нічним небом." },
+        { id: "ghostpike", name: "Примарна щука", rarity: "legendary", strength: 125, xp: 430, coins: 760, min: 2.0, max: 12, locations: ["moonbay"], times: ["night"], weather: ["fog", "rain"], color: "#e1f6ff", accent: "#909cff", desc: "Ледь видима тінь у місячній воді." },
+        { id: "king", name: "Король озера", rarity: "legendary", strength: 150, xp: 650, coins: 1200, min: 8, max: 38, locations: ["lake", "moonbay", "lava"], times: ["dawn", "night"], weather: ["fog", "rain", "heat"], color: "#ffe36c", accent: "#ff865c", desc: "Риба-легенда, яку знають усі рибалки." }
+      ];
+
+      // Локації: кожна має власну палітру, рівень відкриття і пул риби.
+      const LOCATIONS = {
+        lake: {
+          id: "lake",
+          name: "Лісове озеро",
+          level: 1,
+          cost: 0,
+          desc: "Спокійний стартовий берег із карасем, окунем і коропом.",
+          land: "#72a94a",
+          sky: ["#5a96d5", "#67acd8", "#81c6df", "#a8e0e0", "#d5f0c9"],
+          water: ["#48b7d2", "#37a9c9", "#2b94b7", "#247fa2", "#1e6e90", "#1a5e80"],
+          fish: { perch: 1.35, crucian: 1.25, roach: 1.1, carp: 0.8, pike: 0.65, king: 0.08 }
+        },
+        marsh: {
+          id: "marsh",
+          name: "Тихе болото",
+          level: 6,
+          cost: 700,
+          desc: "Густа трава, тепла вода, лин, сом і вугор.",
+          land: "#627f3d",
+          sky: ["#647e9a", "#73929d", "#8aac9e", "#afc998", "#d8dda6"],
+          water: ["#3c947f", "#348573", "#2f7668", "#29675c", "#23584f", "#1e4a44"],
+          fish: { crucian: 1.1, carp: 1.25, tench: 1.35, eel: 0.7, catfish: 0.75 }
+        },
+        river: {
+          id: "river",
+          name: "Гірська річка",
+          level: 12,
+          cost: 1800,
+          desc: "Прохолодна течія з фореллю, судаком та осетром.",
+          land: "#5e8d65",
+          sky: ["#638dd0", "#76add9", "#8fd1e2", "#bee9e1", "#e2f0d3"],
+          water: ["#62c8e8", "#55bde0", "#45a9cf", "#3495bd", "#277fa8", "#1f6990"],
+          fish: { perch: 0.7, roach: 0.7, pike: 0.95, trout: 1.45, zander: 0.9, sturgeon: 0.42, crystal: 0.22 }
+        },
+        moonbay: {
+          id: "moonbay",
+          name: "Місячна бухта",
+          level: 25,
+          cost: 4200,
+          desc: "Нічна вода для примарних і легендарних трофеїв.",
+          land: "#62617c",
+          sky: ["#263456", "#32456e", "#42557d", "#596989", "#748099"],
+          water: ["#5362a8", "#485694", "#3c497f", "#303c69", "#273156", "#202846"],
+          fish: { eel: 0.75, zander: 0.9, catfish: 0.7, sturgeon: 0.7, crystal: 0.55, moon_eel: 0.22, ghostpike: 0.2, king: 0.12 }
+        },
+        lava: {
+          id: "lava",
+          name: "Лавовий ставок",
+          level: 45,
+          cost: 9500,
+          desc: "Небезпечна гаряча локація з жар-карасем і королівськими трофеями.",
+          land: "#5b4740",
+          sky: ["#86514f", "#a96553", "#c67a58", "#dc9967", "#eabf88"],
+          water: ["#ff9d43", "#f77d36", "#df5f2f", "#bd412b", "#8e3028", "#5f2424"],
+          fish: { ember: 1.5, carp: 0.36, catfish: 0.2, king: 0.18 }
+        }
+      };
+
+      // Боси: розблоковуються рівнями 10-100 і мають окрему шкалу опору.
+      const BOSSES = [
+        { level: 10, id: "boss_carp", location: "lake", name: "Великий Короп", strength: 160, hp: 180, xp: 900, coins: 950, color: "#d2a045", accent: "#fff3a6" },
+        { level: 20, id: "boss_catfish", location: "marsh", name: "Стародавній Сом", strength: 205, hp: 245, xp: 1400, coins: 1550, color: "#52616a", accent: "#f0d7a8" },
+        { level: 30, id: "boss_shark", location: "moonbay", name: "Тіньова Акула", strength: 260, hp: 330, xp: 2100, coins: 2400, color: "#35445e", accent: "#91a9ce" },
+        { level: 40, id: "boss_titan", location: "river", name: "Морський Титан", strength: 335, hp: 430, xp: 3200, coins: 3600, color: "#496d91", accent: "#9ee7ff" },
+        { level: 50, id: "boss_crown", location: "river", name: "Коронований Осетер", strength: 420, hp: 540, xp: 4500, coins: 5200, color: "#89939a", accent: "#ffdf64" },
+        { level: 60, id: "boss_moon", location: "moonbay", name: "Місячний Вугор", strength: 520, hp: 670, xp: 6000, coins: 6900, color: "#4e5ca5", accent: "#fff2b4" },
+        { level: 70, id: "boss_abyss", location: "marsh", name: "Безодній Сом", strength: 650, hp: 820, xp: 8200, coins: 9000, color: "#263343", accent: "#65d4ff" },
+        { level: 80, id: "boss_sun", location: "lava", name: "Сонячний Короп", strength: 790, hp: 980, xp: 10500, coins: 12000, color: "#f09d3d", accent: "#fff089" },
+        { level: 90, id: "boss_void", location: "moonbay", name: "Порожня Акула", strength: 960, hp: 1180, xp: 13500, coins: 15500, color: "#222034", accent: "#bd8cff" },
+        { level: 100, id: "boss_legend", location: "lava", name: "Легендарна Риба", strength: 1220, hp: 1450, xp: 20000, coins: 25000, color: "#ffe271", accent: "#ffffff" }
+      ];
+
+      // Особливі нагороди за рівні: монети, вудочки, зачарування, ремонт і сундуки.
+      const SPECIAL_REWARDS = {
+        5: { coins: 500, text: "500 Coins" },
+        10: { rod: "improved", text: "Покращена вудочка" },
+        15: { enchant: "luck", text: "зачарування Удача" },
+        20: { rod: "rare", text: "Рідкісна вудочка" },
+        25: { coins: 1500, text: "1500 Coins" },
+        30: { enchant: "strength", text: "особливе зачарування Сила" },
+        40: { rod: "epic", text: "Епічна вудочка" },
+        50: { chest: true, text: "великий сундук" },
+        60: { enchant: "titan", text: "легендарне зачарування Титан" },
+        70: { rod: "rare", text: "Рідкісна вудочка" },
+        80: { coins: 8000, text: "багато Coins" },
+        90: { enchant: "steady", text: "унікальне зачарування Спокій" },
+        100: { rod: "legendary", coins: 20000, enchant: "wealth", text: "легендарна нагорода" }
+      };
+
+      const RESOURCE_LABELS = {
+        scale: "Луска",
+        crystal: "Кристал",
+        repair: "Ремкомплект",
+        core: "Ядро боса"
+      };
+
+      // Квести: цілі, прогрес і збалансовані нагороди.
+      const QUESTS = [
+        { id: "first_bucket", name: "Перший кошик", desc: "Спіймай 5 будь-яких риб.", type: "totalCaught", target: 5, reward: { coins: 160, xp: 100, resources: { scale: 3 } } },
+        { id: "carp_dinner", name: "Вечеря для кухаря", desc: "Спіймай 3 коропи.", type: "fish", fish: "carp", target: 3, reward: { coins: 260, xp: 160, resources: { repair: 1 } } },
+        { id: "rare_hunter", name: "Рідкісний кльов", desc: "Спіймай 2 рідкісні або кращі риби.", type: "rarityAtLeast", rarity: "rare", target: 2, reward: { coins: 520, xp: 260, enchant: "luck" } },
+        { id: "marsh_trip", name: "Болотяна експедиція", desc: "Спіймай 6 риб у болоті.", type: "location", location: "marsh", target: 6, reward: { coins: 620, xp: 320, resources: { crystal: 1 } } },
+        { id: "first_boss", name: "Велика битва", desc: "Переможи 1 рибу-боса.", type: "bossesCaught", target: 1, reward: { coins: 1200, xp: 700, resources: { core: 1 }, enchant: "strength" } },
+        { id: "merchant", name: "Торговець уловом", desc: "Продай риби на 1500 Coins.", type: "soldCoins", target: 1500, reward: { coins: 400, xp: 240, resources: { repair: 2 } } },
+        { id: "explorer", name: "Мандрівник берегів", desc: "Відкрий 4 локації.", type: "locationsUnlocked", target: 4, reward: { coins: 1500, xp: 650, enchant: "steady" } },
+        { id: "collector", name: "Колекціонер Dex", desc: "Відкрий 10 видів у Fish Dex.", type: "dexSpecies", target: 10, reward: { coins: 900, xp: 480, resources: { crystal: 3 } } }
+      ];
+
+      // Крафт: ресурси перетворюються на ремонт, зачарування та сундуки.
+      const CRAFTS = [
+        { id: "repair_kit", name: "Ремкомплект", desc: "Відновлює вибрану вудочку до максимуму.", cost: { scale: 5 }, reward: { resources: { repair: 1 } } },
+        { id: "crystal_pack", name: "Кристал чар", desc: "Матеріал для сильних зачарувань.", cost: { scale: 8, core: 1 }, reward: { resources: { crystal: 3 } } },
+        { id: "luck_scroll", name: "Свиток удачі", desc: "Додає зачарування Удача в інвентар.", cost: { scale: 6, crystal: 2 }, reward: { enchant: "luck" } },
+        { id: "wealth_scroll", name: "Свиток багатства", desc: "Додає зачарування Багатство.", cost: { scale: 10, crystal: 3 }, reward: { enchant: "wealth" } },
+        { id: "boss_chest", name: "Сундук боса", desc: "Велика випадкова нагорода за ядро боса.", cost: { core: 2, crystal: 4 }, reward: { chest: true } },
+        { id: "shop_token", name: "Торговий жетон", desc: "Підіймає магазин на 2 рівні.", cost: { scale: 14, crystal: 2 }, reward: { shopLevels: 2 } }
+      ];
+
+      // Досягнення: автоматично відкриваються і одразу видають нагороду.
+      const ACHIEVEMENTS = [
+        { id: "first_fish", name: "Перша риба", desc: "Спіймай першу рибу.", reward: { coins: 60, xp: 35 }, progress: () => state.stats.totalCaught, target: 1 },
+        { id: "hundred_fish", name: "100 уловів", desc: "Спіймай 100 риб.", reward: { coins: 2200, resources: { crystal: 4 } }, progress: () => state.stats.totalCaught, target: 100 },
+        { id: "boss_down", name: "Перший бос", desc: "Переможи рибу-боса.", reward: { rod: "rare", xp: 800 }, progress: () => state.stats.bossesCaught, target: 1 },
+        { id: "legend_caught", name: "Легендарний трофей", desc: "Спіймай легендарну рибу.", reward: { coins: 1800, enchant: "wealth" }, progress: () => state.stats.catchesByRarity.legendary || 0, target: 1 },
+        { id: "all_places", name: "Карта берегів", desc: "Відкрий усі локації.", reward: { coins: 3000, resources: { core: 1 } }, progress: () => state.unlockedLocations.length, target: Object.keys(LOCATIONS).length },
+        { id: "dex_master", name: "Дослідник Dex", desc: "Відкрий 12 видів риби.", reward: { coins: 1600, xp: 900, enchant: "luck" }, progress: () => caughtSpeciesCount(), target: 12 },
+        { id: "aquarist", name: "Акваріуміст", desc: "Посели 5 риб в акваріум.", reward: { coins: 900, xp: 420 }, progress: () => state.aquarium.length, target: 5 },
+        { id: "crafter", name: "Майстер крафту", desc: "Створи 5 предметів.", reward: { coins: 1100, resources: { repair: 2 } }, progress: () => state.stats.crafted, target: 5 }
+      ];
+
+      const DEFAULT_SAVE = () => ({
+        level: 1,
+        xp: 0,
+        coins: 180,
+        hearts: 10,
+        shopLevel: 1,
+        location: "lake",
+        unlockedLocations: ["lake"],
+        weather: "sunny",
+        time: 0.32,
+        weatherClock: 42000,
+        rods: [createRod("ordinary")],
+        selectedRodId: null,
+        fish: [],
+        dex: {},
+        aquarium: [],
+        aquariumLast: Date.now(),
+        enchantments: ["luck"],
+        resources: { scale: 0, crystal: 0, repair: 1, core: 0 },
+        defeatedBosses: [],
+        claimedRewards: [],
+        questsClaimed: [],
+        achievements: [],
+        stats: {
+          totalCaught: 0,
+          bossesCaught: 0,
+          coinsEarned: 0,
+          soldCoins: 0,
+          crafted: 0,
+          aquariumDeposits: 0,
+          catchesByFish: {},
+          catchesByRarity: {},
+          catchesByLocation: {}
+        },
+        hotbar: ["rod", "coins", "fish", "enchant", "repair", "crystal", "scale", "core", "chest"]
+      });
+
+      const els = {
+        canvas: document.getElementById("gameCanvas"),
+        hearts: document.getElementById("hearts"),
+        levelValue: document.getElementById("levelValue"),
+        xpFill: document.getElementById("xpFill"),
+        xpText: document.getElementById("xpText"),
+        coinValue: document.getElementById("coinValue"),
+        shopLevelValue: document.getElementById("shopLevelValue"),
+        locationBadge: document.getElementById("locationBadge"),
+        weatherBadge: document.getElementById("weatherBadge"),
+        timeBadge: document.getElementById("timeBadge"),
+        rodName: document.getElementById("rodName"),
+        rodDurabilityFill: document.getElementById("rodDurabilityFill"),
+        rodDurabilityText: document.getElementById("rodDurabilityText"),
+        hint: document.getElementById("hint"),
+        bossBanner: document.getElementById("bossBanner"),
+        levelBanner: document.getElementById("levelBanner"),
+        minigame: document.getElementById("minigame"),
+        fishName: document.getElementById("fishName"),
+        fishStrength: document.getElementById("fishStrength"),
+        strengthFill: document.getElementById("strengthFill"),
+        tensionNeedle: document.getElementById("tensionNeedle"),
+        catchProgressFill: document.getElementById("catchProgressFill"),
+        miniDurabilityFill: document.getElementById("miniDurabilityFill"),
+        reelButton: document.getElementById("reelButton"),
+        castButton: document.getElementById("castButton"),
+        hotbar: document.getElementById("hotbar"),
+        message: document.getElementById("message"),
+        inventoryButton: document.getElementById("inventoryButton"),
+        shopButton: document.getElementById("shopButton"),
+        grindstoneButton: document.getElementById("grindstoneButton"),
+        locationButton: document.getElementById("locationButton"),
+        dexButton: document.getElementById("dexButton"),
+        questButton: document.getElementById("questButton"),
+        craftButton: document.getElementById("craftButton"),
+        aquariumButton: document.getElementById("aquariumButton"),
+        achievementsButton: document.getElementById("achievementsButton"),
+        saveToolsButton: document.getElementById("saveToolsButton"),
+        saveButton: document.getElementById("saveButton"),
+        inventoryModal: document.getElementById("inventoryModal"),
+        shopModal: document.getElementById("shopModal"),
+        grindstoneModal: document.getElementById("grindstoneModal"),
+        locationModal: document.getElementById("locationModal"),
+        dexModal: document.getElementById("dexModal"),
+        questModal: document.getElementById("questModal"),
+        craftModal: document.getElementById("craftModal"),
+        aquariumModal: document.getElementById("aquariumModal"),
+        achievementsModal: document.getElementById("achievementsModal"),
+        saveToolsModal: document.getElementById("saveToolsModal"),
+        inventorySummary: document.getElementById("inventorySummary"),
+        selectedRodDetails: document.getElementById("selectedRodDetails"),
+        rodEnchantSlots: document.getElementById("rodEnchantSlots"),
+        inventoryGrid: document.getElementById("inventoryGrid"),
+        sellDropZone: document.getElementById("sellDropZone"),
+        shopTabs: document.getElementById("shopTabs"),
+        shopCoins: document.getElementById("shopCoins"),
+        shopLevelPanel: document.getElementById("shopLevelPanel"),
+        shopGrid: document.getElementById("shopGrid"),
+        grindSlots: document.getElementById("grindSlots"),
+        grindEnchantGrid: document.getElementById("grindEnchantGrid"),
+        combineInfo: document.getElementById("combineInfo"),
+        combineButton: document.getElementById("combineButton"),
+        resourceSummary: document.getElementById("resourceSummary"),
+        locationSummary: document.getElementById("locationSummary"),
+        locationGrid: document.getElementById("locationGrid"),
+        dexTabs: document.getElementById("dexTabs"),
+        dexSummary: document.getElementById("dexSummary"),
+        dexGrid: document.getElementById("dexGrid"),
+        questSummary: document.getElementById("questSummary"),
+        questGrid: document.getElementById("questGrid"),
+        craftResourceSummary: document.getElementById("craftResourceSummary"),
+        craftGrid: document.getElementById("craftGrid"),
+        aquariumSummary: document.getElementById("aquariumSummary"),
+        collectAquariumButton: document.getElementById("collectAquariumButton"),
+        aquariumGrid: document.getElementById("aquariumGrid"),
+        achievementSummary: document.getElementById("achievementSummary"),
+        achievementGrid: document.getElementById("achievementGrid"),
+        exportSaveButton: document.getElementById("exportSaveButton"),
+        importSaveButton: document.getElementById("importSaveButton"),
+        saveText: document.getElementById("saveText"),
+        toastLayer: document.getElementById("toastLayer")
+      };
+
+      const ctx = els.canvas.getContext("2d");
+      const view = { w: 1280, h: 720, scaleX: 1, scaleY: 1 };
+      const pointer = { x: 0.5, y: 0.5 };
+      const waterRect = { x: 0, y: 250, w: 1280, h: 315 };
+
+      let state = loadGame();
+      let activeShopTab = "rods";
+      let activeDexFilter = "all";
+      let dragPayload = null;
+      let lastFrame = performance.now();
+      let autosaveClock = 0;
+      let audioCtx = null;
+      let fishing = {
+        phase: "idle",
+        cast: null,
+        biteAt: 0,
+        hookUntil: 0,
+        fish: null,
+        progress: 0,
+        tension: 0.45,
+        holding: false,
+        ripples: [],
+        particles: [],
+        resultFlash: 0
+      };
+
+      function createRod(tierId) {
+        const tier = ROD_TIERS[tierId] || ROD_TIERS.ordinary;
+        return {
+          uid: `${tier.id}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+          tier: tier.id,
+          level: 1,
+          durability: tier.durability,
+          maxDurability: tier.durability,
+          enchantments: []
+        };
+      }
+
+      function loadGame() {
+        const fresh = DEFAULT_SAVE();
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            fresh.selectedRodId = fresh.rods[0].uid;
+            return fresh;
+          }
+          const parsed = JSON.parse(raw);
+          const merged = {
+            ...fresh,
+            ...parsed,
+            resources: { ...fresh.resources, ...(parsed.resources || {}) },
+            stats: {
+              ...fresh.stats,
+              ...(parsed.stats || {}),
+              catchesByFish: { ...fresh.stats.catchesByFish, ...((parsed.stats || {}).catchesByFish || {}) },
+              catchesByRarity: { ...fresh.stats.catchesByRarity, ...((parsed.stats || {}).catchesByRarity || {}) },
+              catchesByLocation: { ...fresh.stats.catchesByLocation, ...((parsed.stats || {}).catchesByLocation || {}) }
+            },
+            hotbar: Array.isArray(parsed.hotbar) ? parsed.hotbar : fresh.hotbar
+          };
+          if (!Array.isArray(merged.rods) || !merged.rods.length) merged.rods = fresh.rods;
+          merged.rods = merged.rods.map(rod => {
+            const tier = ROD_TIERS[rod.tier] || ROD_TIERS.ordinary;
+            return {
+              uid: rod.uid || `${tier.id}-${Math.random().toString(36).slice(2, 8)}`,
+              tier: tier.id,
+              level: clamp(Math.floor(rod.level || 1), 1, 99),
+              durability: Number.isFinite(rod.durability) ? rod.durability : tier.durability,
+              maxDurability: Number.isFinite(rod.maxDurability) ? rod.maxDurability : tier.durability,
+              enchantments: Array.isArray(rod.enchantments) ? rod.enchantments.filter(id => ENCHANTS[id]).slice(0, 3) : []
+            };
+          });
+          if (!merged.selectedRodId || !merged.rods.some(rod => rod.uid === merged.selectedRodId)) merged.selectedRodId = merged.rods[0].uid;
+          merged.level = clamp(Math.floor(merged.level || 1), 1, MAX_LEVEL);
+          merged.shopLevel = clamp(Math.floor(merged.shopLevel || 1), 1, 100);
+          merged.xp = Math.max(0, Math.floor(merged.xp || 0));
+          merged.coins = Math.max(0, Math.floor(merged.coins || 0));
+          merged.hearts = clamp(Math.floor(merged.hearts || 10), 1, 10);
+          merged.location = LOCATIONS[merged.location] ? merged.location : "lake";
+          merged.unlockedLocations = Array.isArray(merged.unlockedLocations) ? merged.unlockedLocations.filter(id => LOCATIONS[id]) : ["lake"];
+          if (!merged.unlockedLocations.includes("lake")) merged.unlockedLocations.unshift("lake");
+          if (!merged.unlockedLocations.includes(merged.location)) merged.location = "lake";
+          merged.weather = WEATHER[merged.weather] ? merged.weather : "sunny";
+          merged.time = Number.isFinite(merged.time) ? clamp(merged.time, 0, 0.999) : 0.32;
+          merged.weatherClock = Number.isFinite(merged.weatherClock) ? merged.weatherClock : 42000;
+          merged.fish = Array.isArray(merged.fish) ? merged.fish.slice(0, 220) : [];
+          merged.dex = merged.dex && typeof merged.dex === "object" ? merged.dex : {};
+          merged.aquarium = Array.isArray(merged.aquarium) ? merged.aquarium.slice(0, 40) : [];
+          merged.aquariumLast = Number.isFinite(merged.aquariumLast) ? merged.aquariumLast : Date.now();
+          merged.enchantments = Array.isArray(merged.enchantments) ? merged.enchantments.filter(id => ENCHANTS[id]) : [];
+          merged.defeatedBosses = Array.isArray(merged.defeatedBosses) ? merged.defeatedBosses : [];
+          merged.claimedRewards = Array.isArray(merged.claimedRewards) ? merged.claimedRewards : [];
+          merged.questsClaimed = Array.isArray(merged.questsClaimed) ? merged.questsClaimed : [];
+          merged.achievements = Array.isArray(merged.achievements) ? merged.achievements : [];
+          return merged;
+        } catch (error) {
+          console.warn("Save load failed", error);
+          fresh.selectedRodId = fresh.rods[0].uid;
+          return fresh;
+        }
+      }
+
+      // Збереження прогресу: рівні, XP, монети, вудочки, зачарування, боси, нагороди та інвентар.
+      function saveGame(show = false) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        if (show) toast("Прогрес збережено");
+      }
+
+      function currentLocation() {
+        return LOCATIONS[state.location] || LOCATIONS.lake;
+      }
+
+      function currentWeather() {
+        return WEATHER[state.weather] || WEATHER.sunny;
+      }
+
+      function currentTimeSegment() {
+        return TIME_SEGMENTS.find(segment => state.time >= segment.start && state.time < segment.end) || TIME_SEGMENTS[1];
+      }
+
+      function aquariumBonus() {
+        return Math.min(0.35, state.aquarium.reduce((sum, fish) => sum + RARITY[fish.rarity].mult * 0.004, 0));
+      }
+
+      function aquariumIncomeReady() {
+        const minutes = Math.max(0, (Date.now() - state.aquariumLast) / 60000);
+        const base = state.aquarium.reduce((sum, fish) => sum + Math.max(2, fish.value * 0.035), 0);
+        return Math.floor(base * minutes);
+      }
+
+      function caughtSpeciesCount() {
+        return FISH.filter(fish => state.dex[fish.id]?.caught > 0).length;
+      }
+
+      function getFishById(id) {
+        return FISH.find(fish => fish.id === id);
+      }
+
+      function getLocationFishNames(location = currentLocation()) {
+        return Object.keys(location.fish)
+          .map(id => getFishById(id)?.name)
+          .filter(Boolean)
+          .join(", ");
+      }
+
+      function updateWorld(dt) {
+        state.time = (state.time + dt * 1000 / DAY_LENGTH) % 1;
+        state.weatherClock -= dt * 1000;
+        if (state.weatherClock <= 0) {
+          const options = Object.keys(WEATHER);
+          const oldWeather = state.weather;
+          do {
+            state.weather = options[Math.floor(Math.random() * options.length)];
+          } while (state.weather === oldWeather && options.length > 1);
+          state.weatherClock = rand(45000, 95000);
+          setMessage(`Погода змінилась: ${currentWeather().name}.`);
+          playSound(state.weather === "rain" ? "bite" : "snap");
+        }
+      }
+
+      function recordCatch(fish, entry) {
+        state.dex[fish.id] = state.dex[fish.id] || { caught: 0, bestWeight: 0, bestValue: 0, locations: [] };
+        state.dex[fish.id].caught += 1;
+        state.dex[fish.id].bestWeight = Math.max(state.dex[fish.id].bestWeight || 0, entry.weight);
+        state.dex[fish.id].bestValue = Math.max(state.dex[fish.id].bestValue || 0, entry.value);
+        if (!state.dex[fish.id].locations.includes(entry.location)) state.dex[fish.id].locations.push(entry.location);
+        state.stats.catchesByFish[fish.id] = (state.stats.catchesByFish[fish.id] || 0) + 1;
+        state.stats.catchesByRarity[entry.rarity] = (state.stats.catchesByRarity[entry.rarity] || 0) + 1;
+        state.stats.catchesByLocation[entry.location] = (state.stats.catchesByLocation[entry.location] || 0) + 1;
+      }
+
+      function questProgress(quest) {
+        if (quest.type === "totalCaught") return state.stats.totalCaught;
+        if (quest.type === "fish") return state.stats.catchesByFish[quest.fish] || 0;
+        if (quest.type === "rarityAtLeast") {
+          const min = RARITY[quest.rarity].mult;
+          return Object.entries(state.stats.catchesByRarity)
+            .filter(([rarity]) => RARITY[rarity].mult >= min)
+            .reduce((sum, [, count]) => sum + count, 0);
+        }
+        if (quest.type === "location") return state.stats.catchesByLocation[quest.location] || 0;
+        if (quest.type === "bossesCaught") return state.stats.bossesCaught;
+        if (quest.type === "soldCoins") return state.stats.soldCoins;
+        if (quest.type === "locationsUnlocked") return state.unlockedLocations.length;
+        if (quest.type === "dexSpecies") return caughtSpeciesCount();
+        return 0;
+      }
+
+      function claimQuest(id) {
+        const quest = QUESTS.find(item => item.id === id);
+        if (!quest || state.questsClaimed.includes(id) || questProgress(quest) < quest.target) return;
+        state.questsClaimed.push(id);
+        grantReward(quest.reward);
+        setMessage(`Квест виконано: ${quest.name}.`);
+        toast(`Квест: ${quest.name}`);
+        playSound("level");
+        checkAchievements();
+        renderAll();
+        saveGame();
+      }
+
+      function grantReward(reward = {}) {
+        if (reward.coins) {
+          state.coins += reward.coins;
+          state.stats.coinsEarned += reward.coins;
+        }
+        if (reward.xp) addXp(reward.xp);
+        if (reward.rod) state.rods.push(createRod(reward.rod));
+        if (reward.enchant) state.enchantments.push(reward.enchant);
+        if (reward.resources) {
+          Object.entries(reward.resources).forEach(([id, amount]) => {
+            state.resources[id] = (state.resources[id] || 0) + amount;
+          });
+        }
+        if (reward.shopLevels) state.shopLevel = clamp(state.shopLevel + reward.shopLevels, 1, 100);
+        if (reward.chest) {
+          const coins = 900 + Math.floor(Math.random() * 1600);
+          state.coins += coins;
+          state.stats.coinsEarned += coins;
+          state.resources.repair += 1 + Math.floor(Math.random() * 3);
+          state.resources.crystal += 1 + Math.floor(Math.random() * 3);
+          state.enchantments.push(randomEnchant(state.level));
+          toast(`Сундук дав ${coins} Coins`);
+        }
+      }
+
+      function checkAchievements() {
+        ACHIEVEMENTS.forEach(achievement => {
+          if (state.achievements.includes(achievement.id)) return;
+          if (achievement.progress() >= achievement.target) {
+            state.achievements.push(achievement.id);
+            grantReward(achievement.reward);
+            toast(`Досягнення: ${achievement.name}`);
+            playSound("level");
+          }
+        });
+      }
+
+      function unlockLocation(id) {
+        const location = LOCATIONS[id];
+        if (!location) return;
+        if (state.unlockedLocations.includes(id)) {
+          state.location = id;
+          setMessage(`Локація: ${location.name}. Тут водяться: ${getLocationFishNames(location)}.`);
+          renderAll();
+          saveGame();
+          return;
+        }
+        if (state.level < location.level || state.coins < location.cost) return;
+        state.coins -= location.cost;
+        state.unlockedLocations.push(id);
+        state.location = id;
+        setMessage(`Відкрито локацію: ${location.name}.`);
+        playSound("level");
+        checkAchievements();
+        renderAll();
+        saveGame();
+      }
+
+      function craftItem(id) {
+        const recipe = CRAFTS.find(item => item.id === id);
+        if (!recipe || !canAffordResources(recipe.cost)) return;
+        Object.entries(recipe.cost).forEach(([resource, amount]) => {
+          state.resources[resource] -= amount;
+        });
+        state.stats.crafted += 1;
+        grantReward(recipe.reward);
+        setMessage(`Скрафчено: ${recipe.name}.`);
+        playSound("enchant");
+        checkAchievements();
+        renderAll();
+        saveGame();
+      }
+
+      function canAffordResources(cost) {
+        return Object.entries(cost).every(([resource, amount]) => (state.resources[resource] || 0) >= amount);
+      }
+
+      function moveFishToAquarium(uid) {
+        if (state.aquarium.length >= 40) {
+          toast("Акваріум заповнений.");
+          return;
+        }
+        const index = state.fish.findIndex(item => item.uid === uid);
+        if (index < 0) return;
+        const [fish] = state.fish.splice(index, 1);
+        state.aquarium.push(fish);
+        state.stats.aquariumDeposits += 1;
+        setMessage(`${fish.name} тепер живе в акваріумі.`);
+        playSound("catch");
+        checkAchievements();
+        renderAll();
+        saveGame();
+      }
+
+      function collectAquariumIncome() {
+        const income = aquariumIncomeReady();
+        if (income <= 0) {
+          toast("Акваріум ще не накопичив прибуток.");
+          return;
+        }
+        state.coins += income;
+        state.stats.coinsEarned += income;
+        state.aquariumLast = Date.now();
+        setMessage(`Акваріум приніс ${income} Coins.`);
+        playSound("coin");
+        renderAll();
+        saveGame();
+      }
+
+      function exportSave() {
+        const json = JSON.stringify(state);
+        els.saveText.value = btoa(unescape(encodeURIComponent(json)));
+        els.saveText.select();
+        setMessage("Код збереження готовий для копіювання.");
+      }
+
+      function importSave() {
+        const raw = els.saveText.value.trim();
+        if (!raw) return;
+        try {
+          const json = raw.startsWith("{") ? raw : decodeURIComponent(escape(atob(raw)));
+          JSON.parse(json);
+          localStorage.setItem(STORAGE_KEY, json);
+          toast("Save імпортовано. Сторінка перезавантажиться.");
+          setTimeout(() => window.location.reload(), 350);
+        } catch (error) {
+          toast("Не вдалося імпортувати save.");
+        }
+      }
+
+      function selectedRod() {
+        return state.rods.find(rod => rod.uid === state.selectedRodId) || state.rods[0];
+      }
+
+      function rodTier(rod = selectedRod()) {
+        return ROD_TIERS[rod.tier] || ROD_TIERS.ordinary;
+      }
+
+      function rodStats(rod = selectedRod()) {
+        const tier = rodTier(rod);
+        const levelBonus = 1 + (rod.level - 1) * 0.035;
+        const ench = enchantCounts(rod);
+        return {
+          name: `${tier.name} +${rod.level - 1}`,
+          power: tier.power * levelBonus * (1 + ench.strength * 0.18),
+          speed: tier.speed * levelBonus * (1 + ench.strength * 0.12),
+          durabilityLoss: 1 / (1 + ench.titan * 0.35),
+          steady: 1 + ench.steady * 0.22,
+          luck: 1 + ench.luck * 0.32,
+          wealth: 1 + ench.wealth * 0.30,
+          slots: tier.slots,
+          color: tier.color
+        };
+      }
+
+      function enchantCounts(rod = selectedRod()) {
+        return rod.enchantments.reduce((acc, id) => {
+          acc[id] = (acc[id] || 0) + 1;
+          return acc;
+        }, { luck: 0, strength: 0, wealth: 0, steady: 0, titan: 0 });
+      }
+
+      // Рівні: XP, підвищення рівня, анімація і нагороди.
+      function xpNeeded(level = state.level) {
+        return Math.floor(95 + level * 42 + Math.pow(level, 1.45) * 16);
+      }
+
+      function addXp(amount) {
+        if (state.level >= MAX_LEVEL) {
+          state.xp = 0;
+          return;
+        }
+        state.xp += Math.floor(amount);
+        while (state.level < MAX_LEVEL && state.xp >= xpNeeded()) {
+          state.xp -= xpNeeded();
+          state.level += 1;
+          state.hearts = 10;
+          const rewardText = grantLevelReward(state.level);
+          showLevelBanner(rewardText);
+          playSound("level");
+        }
+      }
+
+      // Нагороди: звичайні та спеціальні подарунки за конкретні рівні.
+      function grantLevelReward(level) {
+        let text = "нагорода: 120 Coins";
+        const coins = 120 + level * 18;
+        state.coins += coins;
+        state.stats.coinsEarned += coins;
+        if (level % 3 === 0) {
+          state.resources.repair += 1;
+          text = `нагорода: ${coins} Coins і ремкомплект`;
+        }
+        if (level % 10 === 0) {
+          state.enchantments.push(randomEnchant(level));
+          text = `нагорода: ${coins} Coins і зачарування`;
+        }
+        const special = SPECIAL_REWARDS[level];
+        if (special && !state.claimedRewards.includes(level)) {
+          state.claimedRewards.push(level);
+          if (special.coins) {
+            state.coins += special.coins;
+            state.stats.coinsEarned += special.coins;
+          }
+          if (special.rod) state.rods.push(createRod(special.rod));
+          if (special.enchant) state.enchantments.push(special.enchant);
+          if (special.chest) {
+            state.coins += 2500;
+            state.resources.repair += 3;
+            state.resources.crystal += 4;
+            state.enchantments.push(randomEnchant(level));
+          }
+          text = `особлива нагорода: ${special.text}`;
+        }
+        return text;
+      }
+
+      function randomEnchant(level = state.level) {
+        const pool = Object.values(ENCHANTS).filter(e => e.shop <= Math.max(1, Math.floor(level * 0.8)));
+        return (pool[Math.floor(Math.random() * pool.length)] || ENCHANTS.luck).id;
+      }
+
+      function showLevelBanner(reward) {
+        els.levelBanner.innerHTML = `<strong>НОВИЙ РІВЕНЬ!</strong>LVL ${state.level}<br>${escapeHtml(reward)}`;
+        els.levelBanner.classList.remove("hidden");
+        setTimeout(() => els.levelBanner.classList.add("hidden"), 2900);
+      }
+
+      function resizeCanvas() {
+        const rect = els.canvas.getBoundingClientRect();
+        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        els.canvas.width = Math.floor(rect.width * dpr);
+        els.canvas.height = Math.floor(rect.height * dpr);
+        view.w = els.canvas.width;
+        view.h = els.canvas.height;
+        view.scaleX = view.w / Math.max(1, rect.width);
+        view.scaleY = view.h / Math.max(1, rect.height);
+        waterRect.x = 0;
+        waterRect.y = view.h * 0.35;
+        waterRect.w = view.w;
+        waterRect.h = view.h * 0.42;
+      }
+
+      function screenToCanvas(event) {
+        const rect = els.canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * view.scaleX,
+          y: (event.clientY - rect.top) * view.scaleY
+        };
+      }
+
+      function canCastAt(point) {
+        return point.y >= waterRect.y + 14 && point.y <= waterRect.y + waterRect.h - 18;
+      }
+
+      // Система риболовлі: закидання, клювання, мінігра натягу, успіх і поломки.
+      function cast(point = null) {
+        const rod = selectedRod();
+        if (fishing.phase !== "idle") return;
+        if (!rod || rod.durability <= 0) {
+          toast("Вудочка зламана. Полагодь її в магазині або використай ремкомплект.");
+          playSound("break");
+          return;
+        }
+        const target = point && canCastAt(point)
+          ? point
+          : { x: view.w * rand(0.45, 0.72), y: waterRect.y + waterRect.h * rand(0.18, 0.48) };
+        fishing.phase = "waiting";
+        fishing.cast = target;
+        fishing.progress = 0;
+        fishing.tension = 0.42;
+        fishing.holding = false;
+        fishing.fish = null;
+        const stats = rodStats();
+        const wait = rand(1300, 4200) / (stats.luck * currentWeather().bite);
+        fishing.biteAt = performance.now() + wait;
+        fishing.ripples.push({ x: target.x, y: target.y, r: 10, life: 1 });
+        setMessage(`${currentLocation().name}: поплавок тихо гойдається на хвилях.`);
+        updateHint("Очікування клювання");
+        playSound("cast");
+      }
+
+      function hookFish() {
+        if (fishing.phase !== "bite") return;
+        fishing.phase = "reeling";
+        fishing.progress = 0;
+        fishing.tension = 0.5;
+        fishing.holding = true;
+        els.minigame.classList.remove("hidden");
+        els.bossBanner.classList.toggle("hidden", !fishing.fish.boss);
+        if (fishing.fish.boss) playSound("boss");
+        setMessage(`${fishing.fish.name} чинить опір.`);
+        updateHint("Тримай натяг у зеленій зоні");
+      }
+
+      function failCatch(reason, durabilityLoss = 8) {
+        const rod = selectedRod();
+        const stats = rodStats(rod);
+        rod.durability = Math.max(0, rod.durability - durabilityLoss * stats.durabilityLoss);
+        fishing.phase = "idle";
+        fishing.cast = null;
+        fishing.fish = null;
+        fishing.holding = false;
+        els.minigame.classList.add("hidden");
+        els.bossBanner.classList.add("hidden");
+        setMessage(reason);
+        updateHint("Готово до закидання");
+        if (rod.durability <= 0) {
+          toast("Вудочка зламалась!");
+          playSound("break");
+        } else {
+          playSound("snap");
+        }
+        renderAll();
+        saveGame();
+      }
+
+      function completeCatch() {
+        const fish = fishing.fish;
+        const stats = rodStats();
+        const rod = selectedRod();
+        const rarity = fish.rarity || "legendary";
+        const weight = fish.boss ? rand(35, 140) + fish.level * 0.8 : rand(fish.min, fish.max);
+        const aquariumBoost = 1 + aquariumBonus();
+        const value = Math.floor((fish.coins + weight * 7) * stats.wealth * aquariumBoost);
+        const xp = Math.floor(fish.xp * (fish.boss ? 1.2 : 1) * (1 + aquariumBonus() * 0.35));
+        const entry = {
+          uid: `fish-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+          id: fish.id,
+          name: fish.name,
+          rarity,
+          weight: Number(weight.toFixed(2)),
+          value,
+          boss: !!fish.boss,
+          location: state.location,
+          weather: state.weather,
+          time: currentTimeSegment().id,
+          caughtAt: Date.now(),
+          color: fish.color,
+          accent: fish.accent
+        };
+        state.fish.unshift(entry);
+        state.fish = state.fish.slice(0, 220);
+        state.coins += value;
+        state.stats.coinsEarned += value;
+        state.stats.totalCaught += 1;
+        recordCatch(fish, entry);
+        addXp(xp);
+        state.resources.scale += fish.boss ? 8 : Math.max(1, Math.floor(RARITY[rarity].mult));
+        if (rarity === "epic" || rarity === "legendary") state.resources.crystal += 1;
+        if (fish.boss) {
+          state.resources.core += 1;
+          state.stats.bossesCaught += 1;
+          if (!state.defeatedBosses.includes(fish.id)) state.defeatedBosses.push(fish.id);
+          state.enchantments.push(randomEnchant(fish.level));
+          const bossTier = fish.level >= 40 ? "epic" : fish.level >= 20 ? "rare" : "improved";
+          if (Math.random() < 0.35) state.rods.push(createRod(bossTier));
+        }
+        rod.durability = Math.max(0, rod.durability - (fish.boss ? 13 : 4) * stats.durabilityLoss);
+        fishing.phase = "idle";
+        fishing.cast = null;
+        fishing.fish = null;
+        fishing.holding = false;
+        els.minigame.classList.add("hidden");
+        els.bossBanner.classList.add("hidden");
+        setMessage(`Спіймано: ${fish.name}, ${entry.weight} кг. +${value} Coins, +${xp} XP.`);
+        updateHint("Улов у інвентарі");
+        spawnCatchParticles();
+        playSound("catch");
+        checkShopLevelFromCatches();
+        checkAchievements();
+        renderAll();
+        saveGame();
+      }
+
+      function checkShopLevelFromCatches() {
+        const target = clamp(1 + Math.floor(state.stats.totalCaught / 4) + Math.floor(state.level / 2), 1, 100);
+        if (target > state.shopLevel) {
+          state.shopLevel = target;
+          toast(`Магазин піднявся до LVL ${state.shopLevel}`);
+        }
+      }
+
+      function spawnFish() {
+        const boss = nextBossCandidate();
+        if (boss && Math.random() < 0.58) {
+          return {
+            ...boss,
+            boss: true,
+            rarity: "legendary",
+            coins: boss.coins,
+            xp: boss.xp,
+            min: 20,
+            max: 120
+          };
+        }
+        const stats = rodStats();
+        const location = currentLocation();
+        const time = currentTimeSegment().id;
+        const weather = currentWeather();
+        const weighted = [];
+        FISH.filter(fish => location.fish[fish.id]).forEach(fish => {
+          let weight = RARITY[fish.rarity].weight * location.fish[fish.id];
+          weight *= stats.luck * (1 + aquariumBonus() * 0.65);
+          weight *= 1 + Math.min(1.7, state.level / 70);
+          if (fish.times && !fish.times.includes(time)) weight *= 0.38;
+          if (fish.weather && !fish.weather.includes(weather.id)) weight *= 0.55;
+          if (RARITY[fish.rarity].mult > 2) weight *= (0.72 + state.shopLevel / 120) * weather.rare;
+          weighted.push({ fish, weight });
+        });
+        return weightedPick(weighted);
+      }
+
+      function nextBossCandidate() {
+        return BOSSES.find(boss => state.level >= boss.level && boss.location === state.location && !state.defeatedBosses.includes(boss.id));
+      }
+
+      function updateFishing(now, dt) {
+        if (fishing.phase === "waiting" && now >= fishing.biteAt) {
+          fishing.phase = "bite";
+          fishing.fish = spawnFish();
+          fishing.hookUntil = now + (fishing.fish.boss ? 1800 : 1350);
+          fishing.ripples.push({ x: fishing.cast.x, y: fishing.cast.y, r: 12, life: 1 });
+          updateHint(fishing.fish.boss ? "Потужне клювання" : "Клювання");
+          setMessage(fishing.fish.boss ? "Вода здригнулась від сили боса." : "Поплавок пішов під воду.");
+          if (fishing.fish.boss) {
+            els.bossBanner.classList.remove("hidden");
+            playSound("boss");
+          } else {
+            playSound("bite");
+          }
+        }
+
+        if (fishing.phase === "bite" && now > fishing.hookUntil) {
+          failCatch("Риба зірвалася з гачка.", 3);
+        }
+
+        if (fishing.phase === "reeling") {
+          updateReeling(dt);
+        }
+
+        fishing.ripples.forEach(r => {
+          r.r += 70 * dt;
+          r.life -= 0.9 * dt;
+        });
+        fishing.ripples = fishing.ripples.filter(r => r.life > 0);
+        fishing.particles.forEach(p => {
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.life -= dt;
+        });
+        fishing.particles = fishing.particles.filter(p => p.life > 0);
+      }
+
+      function updateReeling(dt) {
+        const rod = selectedRod();
+        const stats = rodStats(rod);
+        const fish = fishing.fish;
+        const force = fish.strength / 180;
+        const bossResist = fish.boss ? 0.35 + fish.level / 180 : 0.12;
+        const hold = fishing.holding ? 1 : 0;
+        const safe = fishing.tension >= SAFE_TENSION_MIN && fishing.tension <= SAFE_TENSION_MAX;
+        const tensionRise = (0.38 + force * 0.54) / stats.steady;
+        const tensionDrop = (0.5 + force * 0.18) * stats.steady;
+        fishing.tension += hold ? tensionRise * dt : -tensionDrop * dt;
+        fishing.tension += Math.sin(performance.now() / (fish.boss ? 120 : 190)) * dt * (fish.boss ? 0.15 : 0.08);
+        fishing.tension = clamp(fishing.tension, 0, 1.15);
+
+        if (hold && safe) {
+          fishing.progress += (12 + stats.speed * 9 + stats.power * 4) * dt / Math.max(0.55, force);
+        } else if (hold && fishing.tension > SAFE_TENSION_MAX) {
+          fishing.progress += (4 + stats.power * 2) * dt;
+          damageRod((2.8 + force * 3.5) * dt);
+        } else {
+          fishing.progress -= (fish.boss ? 8 + bossResist * 5 : 4 + force * 3) * dt;
+        }
+
+        if (fishing.tension < 0.08) {
+          fishing.progress -= (fish.boss ? 14 : 7) * dt;
+        }
+
+        if (fishing.tension > 0.98) {
+          damageRod((11 + force * 10) * dt);
+          if (fishing.tension > 1.08) {
+            failCatch("Натяг був занадто сильним. Волосінь не витримала.", fish.boss ? 18 : 9);
+            return;
+          }
+        }
+
+        if (fish.boss && Math.random() < dt * 0.95) {
+          fishing.progress -= rand(1.2, 3.2);
+          fishing.ripples.push({ x: fishing.cast.x + rand(-40, 40), y: fishing.cast.y + rand(-18, 18), r: 8, life: 0.7 });
+        }
+
+        fishing.progress = clamp(fishing.progress, 0, 100);
+        if (rod.durability <= 0) {
+          failCatch("Вудочка зламалась під час боротьби.", 0);
+          return;
+        }
+        if (fishing.progress >= 100) completeCatch();
+      }
+
+      function damageRod(amount) {
+        const rod = selectedRod();
+        const stats = rodStats(rod);
+        rod.durability = Math.max(0, rod.durability - amount * stats.durabilityLoss);
+      }
+
+      function sellFish(uid) {
+        const index = state.fish.findIndex(item => item.uid === uid);
+        if (index < 0) return;
+        const [fish] = state.fish.splice(index, 1);
+        state.coins += fish.value;
+        state.stats.coinsEarned += fish.value;
+        state.stats.soldCoins += fish.value;
+        setMessage(`Продано: ${fish.name}. +${fish.value} Coins.`);
+        playSound("coin");
+        checkAchievements();
+        renderAll();
+        saveGame();
+      }
+
+      // Вудочки: купівля, покращення, ремонт і характеристики.
+      function buyRod(tierId) {
+        const tier = ROD_TIERS[tierId];
+        if (!tier || state.shopLevel < tier.shop || state.coins < tier.cost) return;
+        state.coins -= tier.cost;
+        const rod = createRod(tierId);
+        state.rods.push(rod);
+        state.selectedRodId = rod.uid;
+        setMessage(`Куплено: ${tier.name}.`);
+        playSound("coin");
+        renderAll();
+        saveGame();
+      }
+
+      function upgradeSelectedRod() {
+        const rod = selectedRod();
+        if (!rod) return;
+        const tier = rodTier(rod);
+        const cost = Math.floor(180 * RARITY_SCALE(tier.id) + rod.level * 95);
+        if (state.coins < cost || rod.level >= 99) return;
+        state.coins -= cost;
+        rod.level += 1;
+        rod.maxDurability += Math.ceil(tier.durability * 0.05);
+        rod.durability = Math.min(rod.maxDurability, rod.durability + Math.ceil(rod.maxDurability * 0.28));
+        setMessage(`${tier.short} вудочка покращена до +${rod.level - 1}.`);
+        playSound("coin");
+        renderAll();
+        saveGame();
+      }
+
+      function repairSelectedRod(useKit = false) {
+        const rod = selectedRod();
+        if (!rod) return;
+        if (useKit) {
+          if (state.resources.repair <= 0) return;
+          state.resources.repair -= 1;
+        } else {
+          const missing = rod.maxDurability - rod.durability;
+          const cost = Math.max(25, Math.ceil(missing * 0.75));
+          if (missing <= 0 || state.coins < cost) return;
+          state.coins -= cost;
+        }
+        rod.durability = rod.maxDurability;
+        setMessage("Вудочку відремонтовано.");
+        playSound("coin");
+        renderAll();
+        saveGame();
+      }
+
+      function upgradeShop() {
+        if (state.shopLevel >= 100) return;
+        const cost = Math.floor(120 + Math.pow(state.shopLevel, 1.35) * 34);
+        if (state.coins < cost) return;
+        state.coins -= cost;
+        state.shopLevel += 1;
+        setMessage(`Магазин покращено до LVL ${state.shopLevel}.`);
+        playSound("level");
+        renderAll();
+        saveGame();
+      }
+
+      function buyEnchant(id) {
+        const enchant = ENCHANTS[id];
+        if (!enchant || state.shopLevel < enchant.shop || state.coins < enchant.cost) return;
+        state.coins -= enchant.cost;
+        state.enchantments.push(id);
+        setMessage(`Куплено зачарування: ${enchant.name}.`);
+        playSound("coin");
+        renderAll();
+        saveGame();
+      }
+
+      function applyEnchantToRod(enchantId, slot = null) {
+        const rod = selectedRod();
+        const tier = rodTier(rod);
+        const invIndex = state.enchantments.indexOf(enchantId);
+        if (invIndex < 0 || !ENCHANTS[enchantId]) return false;
+        if (slot === null) {
+          slot = firstFreeEnchantSlot(rod);
+        }
+        if (slot < 0 || slot >= tier.slots) {
+          toast("Немає вільного слота зачарування.");
+          return false;
+        }
+        if (rod.enchantments.includes(enchantId)) {
+          toast("Таке зачарування вже є на цій вудочці.");
+          return false;
+        }
+        state.enchantments.splice(invIndex, 1);
+        rod.enchantments[slot] = enchantId;
+        rod.enchantments = compactWithSlots(rod.enchantments, tier.slots);
+        setMessage(`Накладено зачарування: ${ENCHANTS[enchantId].name}.`);
+        playSound("enchant");
+        renderAll();
+        saveGame();
+        return true;
+      }
+
+      function removeEnchant(slot, destroy = false) {
+        const rod = selectedRod();
+        const enchantId = rod.enchantments[slot];
+        if (!enchantId) return;
+        rod.enchantments.splice(slot, 1);
+        state.resources.crystal += destroy ? 0 : 1;
+        if (!destroy) state.enchantments.push(enchantId);
+        setMessage(destroy ? "Зачарування видалено точилом." : "Зачарування знято, кристал повернувся.");
+        playSound("enchant");
+        renderAll();
+        saveGame();
+      }
+
+      function replaceEnchant(slot, newEnchantId = null) {
+        const rod = selectedRod();
+        const current = rod.enchantments[slot];
+        const replacement = newEnchantId || state.enchantments.find(id => id !== current && !rod.enchantments.includes(id));
+        if (!replacement) {
+          toast("Немає іншого зачарування для заміни.");
+          return;
+        }
+        const index = state.enchantments.indexOf(replacement);
+        if (index < 0) return;
+        if (current) state.enchantments.push(current);
+        state.enchantments.splice(index, 1);
+        rod.enchantments[slot] = replacement;
+        setMessage(`Зачарування замінено на ${ENCHANTS[replacement].name}.`);
+        playSound("enchant");
+        renderAll();
+        saveGame();
+      }
+
+      // Точило: зняття/заміна зачарувань і об'єднання однакових вудочок.
+      function combineRods() {
+        const rod = selectedRod();
+        const matchIndex = state.rods.findIndex(other => other.uid !== rod.uid && other.tier === rod.tier);
+        if (matchIndex < 0) return;
+        const [other] = state.rods.splice(matchIndex, 1);
+        rod.level = Math.min(99, rod.level + Math.max(1, Math.floor(other.level / 2)));
+        rod.maxDurability += Math.ceil(other.maxDurability * 0.35);
+        rod.durability = Math.min(rod.maxDurability, rod.durability + other.durability);
+        other.enchantments.forEach(id => {
+          if (rod.enchantments.length < rodTier(rod).slots && !rod.enchantments.includes(id)) rod.enchantments.push(id);
+          else state.enchantments.push(id);
+        });
+        state.resources.scale += 3;
+        setMessage("Вудочки об'єднано на точилі.");
+        playSound("enchant");
+        renderAll();
+        saveGame();
+      }
+
+      function firstFreeEnchantSlot(rod) {
+        const slots = rodTier(rod).slots;
+        for (let i = 0; i < slots; i += 1) {
+          if (!rod.enchantments[i]) return i;
+        }
+        return -1;
+      }
+
+      function compactWithSlots(list, slots) {
+        return list.filter(Boolean).slice(0, slots);
+      }
+
+      function renderAll() {
+        renderHud();
+        renderHotbar();
+        renderInventory();
+        renderShop();
+        renderGrindstone();
+        renderLocations();
+        renderDex();
+        renderQuests();
+        renderCraft();
+        renderAquarium();
+        renderAchievements();
+        renderSaveTools();
+      }
+
+      function renderHud() {
+        const rod = selectedRod();
+        const stats = rodStats(rod);
+        const tier = rodTier(rod);
+        els.hearts.innerHTML = Array.from({ length: 10 }, (_, i) => `<span class="heart ${i >= state.hearts ? "empty" : ""}"></span>`).join("");
+        els.levelValue.textContent = state.level;
+        els.coinValue.textContent = state.coins;
+        els.shopLevelValue.textContent = state.shopLevel;
+        els.locationBadge.textContent = currentLocation().name;
+        els.weatherBadge.textContent = currentWeather().name;
+        els.timeBadge.textContent = currentTimeSegment().name;
+        const need = xpNeeded();
+        els.xpFill.style.width = `${state.level >= MAX_LEVEL ? 100 : clamp((state.xp / need) * 100, 0, 100)}%`;
+        els.xpText.textContent = state.level >= MAX_LEVEL ? "MAX LVL" : `${state.xp} / ${need} XP`;
+        els.rodName.textContent = stats.name;
+        els.rodName.style.color = tier.color;
+        const durabilityPercent = rod.maxDurability ? clamp((rod.durability / rod.maxDurability) * 100, 0, 100) : 0;
+        els.rodDurabilityFill.style.width = `${durabilityPercent}%`;
+        els.rodDurabilityText.textContent = `${Math.ceil(rod.durability)} / ${rod.maxDurability}`;
+
+        if (fishing.phase === "reeling" && fishing.fish) {
+          els.fishName.textContent = fishing.fish.boss ? `${fishing.fish.name} [БОС]` : fishing.fish.name;
+          els.fishStrength.textContent = fishing.fish.strength;
+          const maxStrength = fishing.fish.boss ? 1250 : 160;
+          els.strengthFill.style.width = `${clamp((fishing.fish.strength / maxStrength) * 100, 8, 100)}%`;
+          els.catchProgressFill.style.width = `${fishing.progress}%`;
+          els.miniDurabilityFill.style.width = `${durabilityPercent}%`;
+          els.tensionNeedle.style.left = `${clamp(fishing.tension * 100, 0, 100)}%`;
+        }
+      }
+
+      function renderHotbar() {
+        const rod = selectedRod();
+        const tier = rodTier(rod);
+        const items = [
+          { id: "rod", label: "Вуд", icon: `<span class="pixel-rod" style="--rod-color:${tier.color}"></span>`, qty: state.rods.length },
+          { id: "coins", label: "Coin", icon: `<span class="pixel-coin"></span>`, qty: shortNum(state.coins) },
+          { id: "fish", label: "Риба", icon: `<span class="pixel-fish"></span>`, qty: state.fish.length },
+          { id: "enchant", label: "Чари", icon: `<span class="pixel-enchant"></span>`, qty: state.enchantments.length },
+          { id: "repair", label: "Рем", icon: `<span class="pixel-kit"></span>`, qty: state.resources.repair },
+          { id: "crystal", label: "Крис", icon: `<span class="pixel-resource"></span>`, qty: state.resources.crystal },
+          { id: "scale", label: "Луск", icon: `<span class="pixel-resource" style="background:#cfe4e3"></span>`, qty: state.resources.scale },
+          { id: "core", label: "Ядро", icon: `<span class="pixel-resource" style="background:#be85ff"></span>`, qty: state.resources.core },
+          { id: "chest", label: "Бос", icon: `<span class="pixel-chest"></span>`, qty: state.defeatedBosses.length }
+        ];
+        els.hotbar.innerHTML = items.map((item, index) => `
+          <div class="hot-slot ${index === 0 ? "active" : ""}" data-hot="${item.id}" title="${item.label}">
+            ${item.icon}
+            <small>${item.qty}</small>
+          </div>
+        `).join("");
+        els.hotbar.querySelectorAll(".hot-slot").forEach(slot => {
+          slot.addEventListener("dragover", dragOver);
+          slot.addEventListener("dragleave", dragLeave);
+          slot.addEventListener("drop", event => {
+            event.preventDefault();
+            slot.classList.remove("drag-over");
+            if (dragPayload?.kind === "rod") {
+              state.selectedRodId = dragPayload.uid;
+              setMessage("Вудочку взято в хотбар.");
+              renderAll();
+              saveGame();
+            }
+          });
+        });
+      }
+
+      function renderInventory() {
+        if (!els.inventoryModal.open && !els.grindstoneModal.open) return;
+        const rod = selectedRod();
+        const tier = rodTier(rod);
+        const stats = rodStats(rod);
+        els.inventorySummary.innerHTML = `
+          <span class="tag">Coins: ${state.coins}</span>
+          <span class="tag">Риба: ${state.fish.length}</span>
+          <span class="tag">Вудочки: ${state.rods.length}</span>
+          <span class="tag">Чари: ${state.enchantments.length}</span>
+          <span class="tag">Ремонт: ${state.resources.repair}</span>
+        `;
+        els.selectedRodDetails.innerHTML = `
+          <strong style="color:${tier.color}">${escapeHtml(tier.name)}</strong><br>
+          Міцність ${Math.ceil(rod.durability)} / ${rod.maxDurability}<br>
+          Сила ${stats.power.toFixed(2)} | Швидкість ${stats.speed.toFixed(2)} | Слоти ${tier.slots}
+        `;
+        els.rodEnchantSlots.innerHTML = Array.from({ length: 3 }, (_, i) => enchantSlotHtml(rod, i)).join("");
+        bindEnchantSlots(els.rodEnchantSlots);
+
+        const items = inventoryItems();
+        els.inventoryGrid.innerHTML = items.map(item => inventorySlotHtml(item)).join("");
+        els.inventoryGrid.querySelectorAll(".inv-slot").forEach(slot => {
+          slot.addEventListener("dragstart", event => {
+            dragPayload = JSON.parse(slot.dataset.payload);
+            event.dataTransfer.setData("text/plain", slot.dataset.payload);
+          });
+          slot.addEventListener("dblclick", () => useInventoryItem(JSON.parse(slot.dataset.payload)));
+          slot.addEventListener("click", () => {
+            const payload = JSON.parse(slot.dataset.payload);
+            if (payload.kind === "rod") {
+              state.selectedRodId = payload.uid;
+              renderAll();
+              saveGame();
+            }
+          });
+        });
+      }
+
+      function inventoryItems() {
+        const rods = state.rods.map(rod => {
+          const tier = rodTier(rod);
+          return {
+            kind: "rod",
+            uid: rod.uid,
+            label: tier.short,
+            qty: `${Math.ceil(rod.durability)}`,
+            icon: `<span class="pixel-rod" style="--rod-color:${tier.color}"></span>`
+          };
+        });
+        const fish = state.fish.map(item => ({
+          kind: "fish",
+          uid: item.uid,
+          label: item.name,
+          qty: item.value,
+          icon: `<span class="pixel-fish" style="--fish:${item.color};--accent:${item.accent}"></span>`
+        }));
+        const enchants = state.enchantments.map((id, index) => ({
+          kind: "enchant",
+          uid: `${id}-${index}`,
+          enchant: id,
+          label: ENCHANTS[id].name,
+          qty: 1,
+          icon: `<span class="pixel-enchant"></span>`
+        }));
+        const resources = Object.entries(state.resources).map(([id, qty]) => ({
+          kind: "resource",
+          uid: id,
+          label: RESOURCE_LABELS[id],
+          qty,
+          icon: id === "repair" ? `<span class="pixel-kit"></span>` : `<span class="pixel-resource"></span>`
+        }));
+        return [...rods, ...enchants, ...resources, ...fish];
+      }
+
+      function inventorySlotHtml(item) {
+        return `
+          <div class="inv-slot" draggable="true" data-payload='${escapeAttr(JSON.stringify(item))}' title="${escapeAttr(item.label)}">
+            <span class="label">${escapeHtml(item.label)}</span>
+            ${item.icon}
+            <small>${item.qty}</small>
+          </div>
+        `;
+      }
+
+      function enchantSlotHtml(rod, index) {
+        const tier = rodTier(rod);
+        const locked = index >= tier.slots;
+        const id = rod.enchantments[index];
+        const enchant = ENCHANTS[id];
+        return `
+          <div class="enchant-slot ${locked ? "locked" : ""}" data-slot="${index}">
+            ${locked ? "Заблоковано" : enchant ? escapeHtml(enchant.name) : "Порожньо"}
+          </div>
+        `;
+      }
+
+      function bindEnchantSlots(root) {
+        root.querySelectorAll(".enchant-slot").forEach(slot => {
+          slot.addEventListener("dragover", dragOver);
+          slot.addEventListener("dragleave", dragLeave);
+          slot.addEventListener("drop", event => {
+            event.preventDefault();
+            slot.classList.remove("drag-over");
+            if (dragPayload?.kind === "enchant") {
+              applyEnchantToRod(dragPayload.enchant, Number(slot.dataset.slot));
+            }
+          });
+          slot.addEventListener("dblclick", () => removeEnchant(Number(slot.dataset.slot), false));
+        });
+      }
+
+      function useInventoryItem(payload) {
+        if (payload.kind === "rod") {
+          state.selectedRodId = payload.uid;
+          setMessage("Вудочку вибрано.");
+        }
+        if (payload.kind === "enchant") applyEnchantToRod(payload.enchant);
+        if (payload.kind === "fish") moveFishToAquarium(payload.uid);
+        if (payload.kind === "resource" && payload.uid === "repair") repairSelectedRod(true);
+        renderAll();
+        saveGame();
+      }
+
+      function renderShop() {
+        if (!els.shopModal.open) return;
+        els.shopCoins.textContent = state.coins;
+        els.shopLevelPanel.textContent = state.shopLevel;
+        els.shopTabs.querySelectorAll("button").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === activeShopTab));
+        if (activeShopTab === "rods") {
+          els.shopGrid.innerHTML = Object.values(ROD_TIERS).map(tier => {
+            const locked = state.shopLevel < tier.shop;
+            const owned = state.rods.some(rod => rod.tier === tier.id);
+            return `
+              <article class="card">
+                <h3 style="color:${tier.color}">${escapeHtml(tier.name)}</h3>
+                <p>Міцність ${tier.durability}, сила ${tier.power}, швидкість ${tier.speed}, слоти ${tier.slots}</p>
+                <div class="meta">
+                  <span class="tag">${tier.cost} Coins</span>
+                  <span class="tag">Shop ${tier.shop}</span>
+                  ${owned ? `<span class="tag">є</span>` : ""}
+                </div>
+                <button data-buy-rod="${tier.id}" ${locked || state.coins < tier.cost ? "disabled" : ""}>Купити</button>
+              </article>
+            `;
+          }).join("");
+        }
+        if (activeShopTab === "enchants") {
+          els.shopGrid.innerHTML = Object.values(ENCHANTS).map(enchant => {
+            const locked = state.shopLevel < enchant.shop;
+            return `
+              <article class="card">
+                <h3 style="color:${enchant.color}">${escapeHtml(enchant.name)}</h3>
+                <p>${escapeHtml(enchant.desc)}</p>
+                <div class="meta">
+                  <span class="tag">${enchant.cost} Coins</span>
+                  <span class="tag">Shop ${enchant.shop}</span>
+                </div>
+                <button data-buy-enchant="${enchant.id}" ${locked || state.coins < enchant.cost ? "disabled" : ""}>Купити</button>
+              </article>
+            `;
+          }).join("");
+        }
+        if (activeShopTab === "upgrades") {
+          const rod = selectedRod();
+          const tier = rodTier(rod);
+          const upgradeCost = Math.floor(180 * RARITY_SCALE(tier.id) + rod.level * 95);
+          const repairCost = Math.max(25, Math.ceil((rod.maxDurability - rod.durability) * 0.75));
+          const shopCost = Math.floor(120 + Math.pow(state.shopLevel, 1.35) * 34);
+          els.shopGrid.innerHTML = `
+            <article class="card">
+              <h3>Покращити характеристики</h3>
+              <p>${escapeHtml(tier.name)} отримає більше міцності, сили і швидкості.</p>
+              <span class="tag">${upgradeCost} Coins</span>
+              <button data-upgrade-rod ${state.coins < upgradeCost || rod.level >= 99 ? "disabled" : ""}>Покращити</button>
+            </article>
+            <article class="card">
+              <h3>Ремонт вудочки</h3>
+              <p>Відновлює міцність до максимуму.</p>
+              <span class="tag">${repairCost} Coins</span>
+              <button data-repair-rod ${state.coins < repairCost || rod.durability >= rod.maxDurability ? "disabled" : ""}>Ремонтувати</button>
+            </article>
+            <article class="card">
+              <h3>Рівень магазину</h3>
+              <p>Максимальний рівень магазину 100. Вищий рівень відкриває кращі предмети.</p>
+              <span class="tag">${state.shopLevel >= 100 ? "MAX" : `${shopCost} Coins`}</span>
+              <button data-upgrade-shop ${state.coins < shopCost || state.shopLevel >= 100 ? "disabled" : ""}>Покращити магазин</button>
+            </article>
+          `;
+        }
+        els.shopGrid.querySelectorAll("[data-buy-rod]").forEach(btn => btn.addEventListener("click", () => buyRod(btn.dataset.buyRod)));
+        els.shopGrid.querySelectorAll("[data-buy-enchant]").forEach(btn => btn.addEventListener("click", () => buyEnchant(btn.dataset.buyEnchant)));
+        const upgradeBtn = els.shopGrid.querySelector("[data-upgrade-rod]");
+        if (upgradeBtn) upgradeBtn.addEventListener("click", upgradeSelectedRod);
+        const repairBtn = els.shopGrid.querySelector("[data-repair-rod]");
+        if (repairBtn) repairBtn.addEventListener("click", () => repairSelectedRod(false));
+        const shopBtn = els.shopGrid.querySelector("[data-upgrade-shop]");
+        if (shopBtn) shopBtn.addEventListener("click", upgradeShop);
+      }
+
+      function renderGrindstone() {
+        if (!els.grindstoneModal.open) return;
+        const rod = selectedRod();
+        els.grindSlots.innerHTML = Array.from({ length: 3 }, (_, i) => enchantSlotHtml(rod, i)).join("");
+        els.grindSlots.querySelectorAll(".enchant-slot").forEach(slot => {
+          const index = Number(slot.dataset.slot);
+          slot.addEventListener("click", () => {
+            const id = selectedRod().enchantments[index];
+            if (id) removeEnchant(index, false);
+          });
+          slot.addEventListener("contextmenu", event => {
+            event.preventDefault();
+            const id = selectedRod().enchantments[index];
+            if (id) removeEnchant(index, true);
+          });
+          slot.addEventListener("dragover", dragOver);
+          slot.addEventListener("dragleave", dragLeave);
+          slot.addEventListener("drop", event => {
+            event.preventDefault();
+            slot.classList.remove("drag-over");
+            if (dragPayload?.kind === "enchant") replaceEnchant(index, dragPayload.enchant);
+          });
+        });
+
+        const compatible = state.rods.find(other => other.uid !== rod.uid && other.tier === rod.tier);
+        els.combineInfo.textContent = compatible
+          ? `Знайдено сумісну вудочку: ${rodTier(compatible).name}.`
+          : "Немає другої вудочки такого самого типу.";
+        els.combineButton.disabled = !compatible;
+        els.resourceSummary.innerHTML = Object.entries(state.resources).map(([id, qty]) => `<span class="tag">${RESOURCE_LABELS[id]}: ${qty}</span>`).join("");
+        els.grindEnchantGrid.innerHTML = state.enchantments.length
+          ? state.enchantments.map((id, index) => `
+            <article class="card">
+              <h3 style="color:${ENCHANTS[id].color}">${escapeHtml(ENCHANTS[id].name)}</h3>
+              <p>${escapeHtml(ENCHANTS[id].desc)}</p>
+              <button data-apply="${id}" data-index="${index}">Накласти у вільний слот</button>
+            </article>
+          `).join("")
+          : `<article class="card"><h3>Немає зачарувань</h3><p>Купи або отримай їх за рівні та босів.</p></article>`;
+        els.grindEnchantGrid.querySelectorAll("[data-apply]").forEach(btn => btn.addEventListener("click", () => applyEnchantToRod(btn.dataset.apply)));
+      }
+
+      function renderLocations() {
+        if (!els.locationModal.open) return;
+        els.locationSummary.innerHTML = `
+          <span class="tag">Поточна: ${escapeHtml(currentLocation().name)}</span>
+          <span class="tag">Відкрито: ${state.unlockedLocations.length} / ${Object.keys(LOCATIONS).length}</span>
+          <span class="tag">Coins: ${state.coins}</span>
+        `;
+        els.locationGrid.innerHTML = Object.values(LOCATIONS).map(location => {
+          const unlocked = state.unlockedLocations.includes(location.id);
+          const active = state.location === location.id;
+          const locked = !unlocked && (state.level < location.level || state.coins < location.cost);
+          return `
+            <article class="card ${unlocked ? "" : "locked"}">
+              <h3>${escapeHtml(location.name)}</h3>
+              <p>${escapeHtml(location.desc)}</p>
+              <p><strong>Риба:</strong> ${escapeHtml(getLocationFishNames(location))}</p>
+              <div class="meta">
+                <span class="tag">LVL ${location.level}</span>
+                <span class="tag">${location.cost} Coins</span>
+                ${active ? `<span class="tag">активна</span>` : ""}
+              </div>
+              <button data-location="${location.id}" ${locked ? "disabled" : ""}>${unlocked ? "Перейти" : "Відкрити"}</button>
+            </article>
+          `;
+        }).join("");
+        els.locationGrid.querySelectorAll("[data-location]").forEach(btn => btn.addEventListener("click", () => unlockLocation(btn.dataset.location)));
+      }
+
+      function renderDex() {
+        if (!els.dexModal.open) return;
+        const caught = caughtSpeciesCount();
+        els.dexSummary.innerHTML = `
+          <span class="tag">Відкрито: ${caught} / ${FISH.length}</span>
+          <span class="tag">Поточна локація: ${escapeHtml(currentLocation().name)}</span>
+          <span class="tag">Бонус акваріума: +${Math.floor(aquariumBonus() * 100)}%</span>
+        `;
+        els.dexTabs.querySelectorAll("button").forEach(btn => btn.classList.toggle("active", btn.dataset.filter === activeDexFilter));
+        const cards = FISH
+          .filter(fish => activeDexFilter === "all" || (activeDexFilter === "caught" ? state.dex[fish.id]?.caught : !state.dex[fish.id]?.caught))
+          .map(fish => {
+            const dex = state.dex[fish.id];
+            const seen = !!dex?.caught;
+            const locations = fish.locations.map(id => LOCATIONS[id]?.name).filter(Boolean).join(", ");
+            return `
+              <article class="card dex-card ${seen ? "" : "unknown"}">
+                <h3 class="rarity-${fish.rarity}">${seen ? escapeHtml(fish.name) : "???"}</h3>
+                <div>${seen ? `<span class="pixel-fish" style="--fish:${fish.color};--accent:${fish.accent}"></span>` : `<span class="pixel-fish" style="--fish:#33343f;--accent:#17151b"></span>`}</div>
+                <p>${seen ? escapeHtml(fish.desc) : "Ще не спіймано."}</p>
+                <div class="meta">
+                  <span class="tag">${RARITY[fish.rarity].label}</span>
+                  <span class="tag">${seen ? `${dex.caught} шт.` : "0 шт."}</span>
+                  <span class="tag">${seen ? `${dex.bestWeight.toFixed(2)} кг` : "вага ?"}</span>
+                </div>
+                <p><strong>Локації:</strong> ${seen ? escapeHtml(locations) : "відкриється після улову"}</p>
+              </article>
+            `;
+          }).join("");
+        els.dexGrid.innerHTML = cards || `<article class="card"><h3>Порожньо</h3><p>Зміни фільтр Dex.</p></article>`;
+      }
+
+      function renderQuests() {
+        if (!els.questModal.open) return;
+        const done = state.questsClaimed.length;
+        els.questSummary.innerHTML = `
+          <span class="tag">Виконано: ${done} / ${QUESTS.length}</span>
+          <span class="tag">Coins: ${state.coins}</span>
+          <span class="tag">LVL ${state.level}</span>
+        `;
+        els.questGrid.innerHTML = QUESTS.map(quest => {
+          const progress = questProgress(quest);
+          const complete = progress >= quest.target;
+          const claimed = state.questsClaimed.includes(quest.id);
+          return `
+            <article class="card ${claimed ? "done" : ""}">
+              <h3>${escapeHtml(quest.name)}</h3>
+              <p>${escapeHtml(quest.desc)}</p>
+              <div class="progress-mini"><i style="width:${clamp(progress / quest.target * 100, 0, 100)}%"></i></div>
+              <div class="meta">
+                <span class="tag">${Math.min(progress, quest.target)} / ${quest.target}</span>
+                <span class="tag">${claimed ? "отримано" : complete ? "готово" : "в роботі"}</span>
+              </div>
+              <button data-claim-quest="${quest.id}" ${!complete || claimed ? "disabled" : ""}>Забрати нагороду</button>
+            </article>
+          `;
+        }).join("");
+        els.questGrid.querySelectorAll("[data-claim-quest]").forEach(btn => btn.addEventListener("click", () => claimQuest(btn.dataset.claimQuest)));
+      }
+
+      function renderCraft() {
+        if (!els.craftModal.open) return;
+        els.craftResourceSummary.innerHTML = Object.entries(state.resources)
+          .map(([id, qty]) => `<span class="tag">${RESOURCE_LABELS[id]}: ${qty}</span>`)
+          .join("") + `<span class="tag">Скрафчено: ${state.stats.crafted}</span>`;
+        els.craftGrid.innerHTML = CRAFTS.map(recipe => {
+          const afford = canAffordResources(recipe.cost);
+          const cost = Object.entries(recipe.cost).map(([id, amount]) => `${RESOURCE_LABELS[id]} x${amount}`).join(", ");
+          return `
+            <article class="card ${afford ? "" : "locked"}">
+              <h3>${escapeHtml(recipe.name)}</h3>
+              <p>${escapeHtml(recipe.desc)}</p>
+              <span class="tag">${escapeHtml(cost)}</span>
+              <button data-craft="${recipe.id}" ${afford ? "" : "disabled"}>Скрафтити</button>
+            </article>
+          `;
+        }).join("");
+        els.craftGrid.querySelectorAll("[data-craft]").forEach(btn => btn.addEventListener("click", () => craftItem(btn.dataset.craft)));
+      }
+
+      function renderAquarium() {
+        if (!els.aquariumModal.open) return;
+        const income = aquariumIncomeReady();
+        els.aquariumSummary.innerHTML = `
+          <span class="tag">Риби: ${state.aquarium.length} / 40</span>
+          <span class="tag">Бонус: +${Math.floor(aquariumBonus() * 100)}%</span>
+          <span class="tag">Прибуток: ${income} Coins</span>
+        `;
+        els.collectAquariumButton.disabled = income <= 0;
+        els.aquariumGrid.innerHTML = state.aquarium.length
+          ? state.aquarium.map(fish => `
+            <article class="card">
+              <h3 class="rarity-${fish.rarity}">${escapeHtml(fish.name)}</h3>
+              <span class="pixel-fish" style="--fish:${fish.color};--accent:${fish.accent}"></span>
+              <p>${fish.weight} кг | ${LOCATIONS[fish.location]?.name || "невідомо"}</p>
+            </article>
+          `).join("")
+          : `<article class="card"><h3>Акваріум порожній</h3><p>Двічі клікни по рибі в інвентарі, щоб поселити її тут.</p></article>`;
+      }
+
+      function renderAchievements() {
+        if (!els.achievementsModal.open) return;
+        els.achievementSummary.innerHTML = `
+          <span class="tag">Відкрито: ${state.achievements.length} / ${ACHIEVEMENTS.length}</span>
+          <span class="tag">Спіймано: ${state.stats.totalCaught}</span>
+          <span class="tag">Боси: ${state.stats.bossesCaught}</span>
+        `;
+        els.achievementGrid.innerHTML = ACHIEVEMENTS.map(achievement => {
+          const progress = achievement.progress();
+          const done = state.achievements.includes(achievement.id);
+          return `
+            <article class="card ${done ? "done" : ""}">
+              <h3>${escapeHtml(achievement.name)}</h3>
+              <p>${escapeHtml(achievement.desc)}</p>
+              <div class="progress-mini"><i style="width:${clamp(progress / achievement.target * 100, 0, 100)}%"></i></div>
+              <div class="meta">
+                <span class="tag">${Math.min(progress, achievement.target)} / ${achievement.target}</span>
+                <span class="tag">${done ? "відкрито" : "закрито"}</span>
+              </div>
+            </article>
+          `;
+        }).join("");
+      }
+
+      function renderSaveTools() {
+        if (!els.saveToolsModal.open) return;
+        if (!els.saveText.value) {
+          els.saveText.placeholder = "Натисни Експорт save, щоб отримати код. Для імпорту встав код сюди.";
+        }
+      }
+
+      function dragOver(event) {
+        event.preventDefault();
+        event.currentTarget.classList.add("drag-over");
+      }
+
+      function dragLeave(event) {
+        event.currentTarget.classList.remove("drag-over");
+      }
+
+      function setupDropZones() {
+        els.sellDropZone.addEventListener("dragover", dragOver);
+        els.sellDropZone.addEventListener("dragleave", dragLeave);
+        els.sellDropZone.addEventListener("drop", event => {
+          event.preventDefault();
+          els.sellDropZone.classList.remove("drag-over");
+          if (dragPayload?.kind === "fish") sellFish(dragPayload.uid);
+        });
+      }
+
+      function setupEvents() {
+        window.addEventListener("resize", resizeCanvas);
+        document.querySelectorAll("[data-close]").forEach(button => {
+          button.addEventListener("click", () => document.getElementById(button.dataset.close).close());
+        });
+        els.inventoryButton.addEventListener("click", () => openModal(els.inventoryModal));
+        els.shopButton.addEventListener("click", () => openModal(els.shopModal));
+        els.grindstoneButton.addEventListener("click", () => openModal(els.grindstoneModal));
+        els.locationButton.addEventListener("click", () => openModal(els.locationModal));
+        els.dexButton.addEventListener("click", () => openModal(els.dexModal));
+        els.questButton.addEventListener("click", () => openModal(els.questModal));
+        els.craftButton.addEventListener("click", () => openModal(els.craftModal));
+        els.aquariumButton.addEventListener("click", () => openModal(els.aquariumModal));
+        els.achievementsButton.addEventListener("click", () => openModal(els.achievementsModal));
+        els.saveToolsButton.addEventListener("click", () => openModal(els.saveToolsModal));
+        els.saveButton.addEventListener("click", () => saveGame(true));
+        els.castButton.addEventListener("click", () => cast());
+        els.reelButton.addEventListener("pointerdown", event => {
+          event.preventDefault();
+          if (fishing.phase === "reeling") fishing.holding = true;
+        });
+        ["pointerup", "pointercancel", "pointerleave"].forEach(type => {
+          els.reelButton.addEventListener(type, () => {
+            if (fishing.phase === "reeling") fishing.holding = false;
+          });
+        });
+        els.canvas.addEventListener("pointermove", event => {
+          const p = screenToCanvas(event);
+          pointer.x = p.x / view.w;
+          pointer.y = p.y / view.h;
+        });
+        els.canvas.addEventListener("pointerdown", event => {
+          unlockAudio();
+          const point = screenToCanvas(event);
+          if (fishing.phase === "idle") cast(point);
+          else if (fishing.phase === "bite") hookFish();
+          else if (fishing.phase === "reeling") fishing.holding = true;
+        });
+        document.addEventListener("pointerup", () => {
+          if (fishing.phase === "reeling") fishing.holding = false;
+        });
+        document.addEventListener("keydown", event => {
+          if (event.repeat) return;
+          if (event.code === "Space") {
+            event.preventDefault();
+            unlockAudio();
+            if (fishing.phase === "idle") cast();
+            else if (fishing.phase === "bite") hookFish();
+            else if (fishing.phase === "reeling") fishing.holding = true;
+          }
+          if (event.key.toLowerCase() === "i") openModal(els.inventoryModal);
+          if (event.key.toLowerCase() === "g") openModal(els.grindstoneModal);
+          if (event.key.toLowerCase() === "m") openModal(els.locationModal);
+          if (event.key.toLowerCase() === "q") openModal(els.questModal);
+          if (event.key.toLowerCase() === "d") openModal(els.dexModal);
+          if (event.key.toLowerCase() === "c") openModal(els.craftModal);
+          if (event.key.toLowerCase() === "a") openModal(els.aquariumModal);
+        });
+        document.addEventListener("keyup", event => {
+          if (event.code === "Space" && fishing.phase === "reeling") fishing.holding = false;
+        });
+        els.shopTabs.addEventListener("click", event => {
+          const btn = event.target.closest("[data-tab]");
+          if (!btn) return;
+          activeShopTab = btn.dataset.tab;
+          renderShop();
+        });
+        els.dexTabs.addEventListener("click", event => {
+          const btn = event.target.closest("[data-filter]");
+          if (!btn) return;
+          activeDexFilter = btn.dataset.filter;
+          renderDex();
+        });
+        els.combineButton.addEventListener("click", combineRods);
+        els.collectAquariumButton.addEventListener("click", collectAquariumIncome);
+        els.exportSaveButton.addEventListener("click", exportSave);
+        els.importSaveButton.addEventListener("click", importSave);
+        setupDropZones();
+      }
+
+      function openModal(dialog) {
+        renderAll();
+        if (!dialog.open) dialog.showModal();
+        renderAll();
+      }
+
+      function updateHint(text) {
+        els.hint.textContent = text;
+      }
+
+      function setMessage(text) {
+        els.message.textContent = text;
+      }
+
+      function loop(now) {
+        const dt = Math.min(0.08, (now - lastFrame) / 1000);
+        lastFrame = now;
+        autosaveClock += dt;
+        updateWorld(dt);
+        updateFishing(now, dt);
+        drawScene(now, dt);
+        renderHud();
+        if (els.aquariumModal.open) renderAquarium();
+        if (els.questModal.open) renderQuests();
+        if (els.achievementsModal.open) renderAchievements();
+        if (autosaveClock > 6) {
+          autosaveClock = 0;
+          saveGame(false);
+        }
+        requestAnimationFrame(loop);
+      }
+
+      function drawScene(now, dt) {
+        const w = view.w;
+        const h = view.h;
+        ctx.imageSmoothingEnabled = false;
+        drawSky(w, h, now);
+        drawTrees(w, h, now);
+        drawWater(w, h, now, dt);
+        drawShore(w, h, now);
+        drawEnvironment(w, h, now);
+        drawPlayer(w, h, now);
+        drawLineAndBobber(w, h, now);
+        drawWeatherEffects(w, h, now, dt);
+        drawParticles();
+      }
+
+      function rect(x, y, width, height, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
+      }
+
+      function outlineRect(x, y, width, height, fill, outline = "#16131a", stroke = 4) {
+        rect(x - stroke, y - stroke, width + stroke * 2, height + stroke * 2, outline);
+        rect(x, y, width, height, fill);
+      }
+
+      function drawSky(w, h, now) {
+        const bands = currentLocation().sky;
+        const time = currentTimeSegment().id;
+        const weather = currentWeather().id;
+        bands.forEach((color, i) => rect(0, i * h * 0.07, w, h * 0.075 + 2, color));
+        if (time === "night") {
+          rect(0, 0, w, h * 0.36, "rgba(10, 16, 38, 0.58)");
+          drawMoon(w * 0.78, h * 0.11);
+          for (let i = 0; i < 42; i += 1) {
+            rect((i * 97) % w, 18 + (i * 53) % Math.max(90, h * 0.28), 4, 4, "rgba(255,255,220,0.8)");
+          }
+        } else {
+          drawSun(w * 0.78, h * 0.11);
+        }
+        if (time === "dusk" || time === "dawn") rect(0, h * 0.2, w, h * 0.18, "rgba(255, 158, 94, 0.18)");
+        if (weather === "heat") rect(0, h * 0.23, w, h * 0.14, "rgba(255, 202, 113, 0.22)");
+        drawCloud(w * 0.24 + Math.sin(now / 2500) * 20, h * 0.13, 1.1, weather === "rain" ? "#7d8791" : "#fff7df");
+        drawCloud(w * 0.58 + Math.sin(now / 3100) * 24, h * 0.2, 0.85, weather === "rain" ? "#6f7a85" : "#fff7df");
+        if (weather === "fog") rect(0, h * 0.18, w, h * 0.22, "rgba(226, 237, 229, 0.34)");
+      }
+
+      function drawSun(x, y) {
+        const s = view.w / 160;
+        rect(x - s * 4, y - s * 2, s * 8, s * 4, "#ffe481");
+        rect(x - s * 2, y - s * 4, s * 4, s * 8, "#ffe481");
+        rect(x - s, y - s * 6, s * 2, s, "#fff2a5");
+        rect(x - s, y + s * 5, s * 2, s, "#eec04f");
+        rect(x - s * 6, y - s, s, s * 2, "#eec04f");
+        rect(x + s * 5, y - s, s, s * 2, "#fff2a5");
+      }
+
+      function drawMoon(x, y) {
+        const s = view.w / 175;
+        rect(x - s * 3, y - s * 3, s * 6, s * 6, "#f3e7b8");
+        rect(x - s * 2, y - s * 4, s * 4, s, "#fff4cb");
+        rect(x - s * 2, y + s * 3, s * 4, s, "#d9c98d");
+        rect(x + s, y - s * 3, s * 3, s * 5, "#202846");
+      }
+
+      function drawCloud(x, y, scale, color = "#fff7df") {
+        const s = view.w / 150 * scale;
+        const chunks = [[-7, 1, 3, 2], [-5, -1, 4, 4], [-1, -2, 5, 5], [3, -1, 4, 4], [6, 1, 3, 2], [-8, 3, 17, 2]];
+        chunks.forEach(([cx, cy, cw, ch]) => rect(x + cx * s, y + cy * s, cw * s, ch * s, color));
+        rect(x - 8 * s, y + 4.8 * s, 16 * s, 0.8 * s, color === "#fff7df" ? "#c5eff2" : "#58636d");
+      }
+
+      function drawTrees(w, h, now) {
+        const base = h * 0.34;
+        const loc = currentLocation();
+        const leafA = loc.id === "moonbay" ? "#34415e" : loc.id === "lava" ? "#5d342e" : loc.id === "marsh" ? "#2d5a32" : "#2d6632";
+        const leafB = loc.id === "moonbay" ? "#242d45" : loc.id === "lava" ? "#3d2927" : loc.id === "marsh" ? "#20462a" : "#214c2a";
+        rect(0, base - 12, w, 34, leafA);
+        rect(0, base + 12, w, 26, leafB);
+        const shift = (pointer.x - 0.5) * 18;
+        for (let i = 0; i < 22; i += 1) {
+          const x = ((i * w / 18 + shift) % (w + 90)) - 45;
+          const size = 12 + (i % 4) * 3;
+          const y = base - 18 - (i % 3) * 10;
+          rect(x - size * 0.22, y + size * 1.5, size * 0.42, size * 2.6, "#6f442a");
+          rect(x - size, y + size * 1.3, size * 2, size * 0.8, i % 2 ? "#244f2a" : "#347238");
+          rect(x - size * 1.25, y + size * 0.5, size * 2.5, size, i % 2 ? "#1d4327" : "#2a6132");
+          rect(x - size * 0.75, y - size * 0.2, size * 1.5, size, i % 2 ? "#316b35" : "#438447");
+        }
+      }
+
+      function drawWater(w, h, now, dt) {
+        const top = waterRect.y;
+        const height = waterRect.h;
+        const bands = currentLocation().water;
+        const night = currentTimeSegment().id === "night";
+        bands.forEach((color, i) => rect(0, top + height / bands.length * i, w, height / bands.length + 2, color));
+        if (night) rect(0, top, w, height, "rgba(9, 15, 33, 0.28)");
+        if (currentWeather().id === "fog") rect(0, top, w, height * 0.45, "rgba(225, 235, 229, 0.20)");
+        for (let row = 0; row < 18; row += 1) {
+          const y = top + 14 + row * height / 18;
+          const step = 44;
+          const shift = (now / (70 + row * 7) + row * 21) % step;
+          const color = row % 2 ? "rgba(195,246,255,0.32)" : "rgba(14,79,118,0.22)";
+          for (let x = -step; x < w + step; x += step * 2) {
+            rect(x + shift, y, step, 5, color);
+            rect(x + shift + step * 0.62, y + 9, step * 0.54, 4, color);
+          }
+        }
+        for (let i = 0; i < 13; i += 1) {
+          const x = (i * 147 + now * 0.018 * (i % 2 ? 1 : -1)) % (w + 90) - 40;
+          const y = top + height * (0.18 + (i % 6) * 0.105) + Math.sin(now / 800 + i) * 7;
+          rect(x, y, 54 + (i % 3) * 18, 8, "rgba(10, 43, 61, 0.16)");
+          rect(x + 44, y - 5, 16, 5, "rgba(10, 43, 61, 0.11)");
+        }
+        fishing.ripples.forEach(ripple => {
+          const alpha = 0.48 * ripple.life;
+          rect(ripple.x - ripple.r * 1.4, ripple.y - ripple.r * 0.25, ripple.r, 4, `rgba(255,255,255,${alpha})`);
+          rect(ripple.x + ripple.r * 0.2, ripple.y - ripple.r * 0.25, ripple.r * 1.35, 4, `rgba(255,255,255,${alpha})`);
+          rect(ripple.x - ripple.r, ripple.y + ripple.r * 0.28, ripple.r * 1.75, 4, `rgba(255,255,255,${alpha * 0.72})`);
+        });
+      }
+
+      function drawShore(w, h, now) {
+        const grassTop = waterRect.y + waterRect.h - 6;
+        const land = currentLocation().land;
+        rect(0, grassTop, w, h - grassTop, land);
+        for (let x = -30; x < w + 30; x += 34) {
+          const y = grassTop + ((x / 34) % 3) * 6;
+          rect(x, y, 34, 22, currentLocation().id === "lava" ? "#7b5a47" : "#7eba51");
+          rect(x, y + 22, 34, 9, currentLocation().id === "lava" ? "#3e302d" : "#427d31");
+        }
+        rect(0, grassTop + h * 0.105, w, h, currentLocation().id === "lava" ? "#6a4a40" : "#b88955");
+        for (let y = grassTop + h * 0.13; y < h; y += 26) {
+          for (let x = (y % 52); x < w; x += 52) {
+            rect(x, y, 9, 9, (x + y) % 3 ? "#7c593c" : "#5e4838");
+          }
+        }
+      }
+
+      function drawEnvironment(w, h, now) {
+        const y = waterRect.y + waterRect.h + 12;
+        const loc = currentLocation();
+        if (loc.id !== "lava") {
+          drawBlockTree(w * 0.1, y - 100, 1.15);
+          drawBlockTree(w * 0.89, y - 112, 1);
+        } else {
+          drawLavaVent(w * 0.1, y - 18, now);
+          drawLavaVent(w * 0.9, y - 24, now + 700);
+        }
+        drawRock(w * 0.23, y + 55, 1.2);
+        drawRock(w * 0.77, y + 48, 0.9);
+        for (let i = 0; i < 30; i += 1) {
+          const x = (i * 47 + (pointer.x - 0.5) * 14) % w;
+          const gy = y + 6 + (i % 4) * 10;
+          rect(x, gy, 5, 25 + (i % 3) * 9, loc.id === "lava" ? "#93533f" : i % 2 ? "#2f6d2d" : "#438d35");
+          rect(x - 5, gy + 8, 5, 8, loc.id === "lava" ? "#5a342d" : "#255827");
+        }
+        drawCabin(w * 0.83, waterRect.y - 10, 78);
+      }
+
+      function drawLavaVent(x, y, now) {
+        const s = view.w / 170;
+        outlineRect(x - s * 2.5, y, s * 5, s * 2.2, "#50342f", "#16131a", 3);
+        rect(x - s * 1.7, y - s * (1 + Math.sin(now / 260) * 0.6), s * 0.7, s * 2, "#ffcf69");
+        rect(x, y - s * (1.8 + Math.sin(now / 330) * 0.5), s * 0.8, s * 2.8, "#ff7d46");
+        rect(x + s * 1.3, y - s * (1.2 + Math.sin(now / 290) * 0.5), s * 0.7, s * 2.2, "#ffe06c");
+      }
+
+      function drawBlockTree(x, y, scale) {
+        const s = view.w / 165 * scale;
+        rect(x - 0.45 * s, y + 4.5 * s, 0.9 * s, 5.5 * s, "#71452c");
+        rect(x - 3.2 * s, y + 2.6 * s, 6.4 * s, 2 * s, "#2f6e35");
+        rect(x - 2.6 * s, y + 0.8 * s, 5.2 * s, 2.2 * s, "#3e813f");
+        rect(x - 1.8 * s, y - 1.0 * s, 3.6 * s, 2.2 * s, "#55a24b");
+      }
+
+      function drawRock(x, y, scale) {
+        const s = view.w / 190 * scale;
+        outlineRect(x - 2.7 * s, y - 1.2 * s, 5.4 * s, 2.4 * s, "#82796e", "#2d2b2f", 3);
+        rect(x - 1.8 * s, y - 0.7 * s, 1.4 * s, 0.5 * s, "#b7ada0");
+        rect(x + 0.7 * s, y + 0.2 * s, 1.6 * s, 0.5 * s, "#5a544f");
+      }
+
+      function drawCabin(x, y, size) {
+        const s = size * view.w / 1280;
+        outlineRect(x - s * 0.58, y - s * 0.1, s * 1.16, s * 0.78, "#966142", "#16131a", 4);
+        rect(x - s * 0.45, y + s * 0.18, s * 0.28, s * 0.5, "#5c382b");
+        outlineRect(x + s * 0.15, y + s * 0.15, s * 0.26, s * 0.24, "#232536", "#16131a", 3);
+        rect(x - s * 0.72, y - s * 0.22, s * 1.44, s * 0.18, "#7e353e");
+        rect(x - s * 0.58, y - s * 0.38, s * 1.16, s * 0.18, "#9e4852");
+        rect(x - s * 0.36, y - s * 0.54, s * 0.72, s * 0.18, "#b4555a");
+      }
+
+      function drawPlayer(w, h, now) {
+        const x = w * 0.47;
+        const y = waterRect.y + waterRect.h + h * 0.13;
+        const s = w / 185;
+        const bob = Math.sin(now / 420) * s * 0.16;
+        outlineRect(x - 1.1 * s, y - 8.5 * s + bob, 2.2 * s, 2.4 * s, "#d69b6f", "#16131a", 3);
+        rect(x - 0.95 * s, y - 8.75 * s + bob, 1.9 * s, 0.45 * s, "#3b2a22");
+        rect(x - 0.55 * s, y - 7.55 * s + bob, 0.35 * s, 0.35 * s, "#111");
+        rect(x + 0.45 * s, y - 7.55 * s + bob, 0.35 * s, 0.35 * s, "#111");
+        outlineRect(x - 1.25 * s, y - 5.95 * s + bob, 2.5 * s, 3.6 * s, "#356a9a", "#16131a", 3);
+        rect(x - 2.0 * s, y - 5.6 * s + bob, 0.8 * s, 2.9 * s, "#d69b6f");
+        rect(x + 1.2 * s, y - 5.6 * s + bob, 0.8 * s, 2.9 * s, "#d69b6f");
+        rect(x - 1.1 * s, y - 2.25 * s, 0.85 * s, 3.2 * s, "#26344c");
+        rect(x + 0.25 * s, y - 2.25 * s, 0.85 * s, 3.2 * s, "#26344c");
+        rect(x - 1.45 * s, y + 0.75 * s, 1.45 * s, 0.55 * s, "#1d1d24");
+        rect(x + 0.25 * s, y + 0.75 * s, 1.45 * s, 0.55 * s, "#1d1d24");
+        drawRod(x + 1.8 * s, y - 5.2 * s + bob, w * 0.68, waterRect.y + waterRect.h * 0.05, rodTier().color);
+      }
+
+      function drawRod(x1, y1, x2, y2, color) {
+        const steps = 28;
+        for (let i = 0; i <= steps; i += 1) {
+          const t = i / steps;
+          const x = x1 + (x2 - x1) * t;
+          const y = y1 + (y2 - y1) * t - Math.sin(t * Math.PI) * view.h * 0.055;
+          rect(x, y, 5, 5, color);
+        }
+      }
+
+      function drawLineAndBobber(w, h, now) {
+        if (!fishing.cast) return;
+        const start = { x: w * 0.68, y: waterRect.y + waterRect.h * 0.05 };
+        const bobY = fishing.cast.y + Math.sin(now / 210) * (fishing.phase === "bite" ? 10 : 3);
+        line(start.x, start.y, fishing.cast.x, bobY, "rgba(245,248,255,0.85)", 2);
+        line(fishing.cast.x, bobY, fishing.cast.x + Math.sin(now / 460) * 8, bobY + 54, "rgba(245,248,255,0.7)", 2);
+        outlineRect(fishing.cast.x - 8, bobY - 17, 16, 28, fishing.phase === "bite" ? "#ffe25d" : "#f7f8ff", "#16131a", 3);
+        rect(fishing.cast.x - 8, bobY - 2, 16, 8, "#d6403a");
+        rect(fishing.cast.x - 3, bobY + 11, 6, 5, "#16131a");
+        if (fishing.phase === "bite") {
+          rect(fishing.cast.x - 12, bobY - 48, 24, 24, "#fff1a1");
+          rect(fishing.cast.x - 3, bobY - 43, 6, 14, "#d6403a");
+          rect(fishing.cast.x - 3, bobY - 25, 6, 5, "#d6403a");
+        }
+        if (fishing.phase === "reeling" && fishing.fish) {
+          drawFishSprite(fishing.fish, fishing.cast.x + Math.sin(now / 130) * 22, bobY + 56 + Math.sin(now / 170) * 9, fishing.fish.boss ? 1.5 : 1, now);
+        }
+      }
+
+      function line(x1, y1, x2, y2, color, size) {
+        const steps = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 8));
+        for (let i = 0; i <= steps; i += 1) {
+          const t = i / steps;
+          rect(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, size, size, color);
+        }
+      }
+
+      function drawFishSprite(fish, x, y, scale, now) {
+        const flip = Math.sin(now / 180) > 0 ? 1 : -1;
+        const s = view.w / 210 * scale;
+        ctx.save();
+        ctx.translate(Math.round(x), Math.round(y));
+        ctx.scale(flip, 1);
+        rect(-9 * s, -3 * s, 15 * s, 6 * s, "#16131a");
+        rect(-6 * s, -5 * s, 10 * s, 10 * s, "#16131a");
+        rect(-8 * s, -2 * s, 13 * s, 4 * s, fish.color);
+        rect(-5 * s, -4 * s, 8 * s, 8 * s, fish.color);
+        rect(2 * s, -2 * s, 3 * s, 4 * s, fish.accent);
+        rect(-12 * s, -4 * s, 4 * s, 3 * s, fish.accent);
+        rect(-12 * s, 1 * s, 4 * s, 3 * s, fish.accent);
+        rect(4 * s, -2 * s, s, s, "#101014");
+        if (fish.boss) {
+          rect(-4 * s, -8 * s, 2 * s, s, "#ffe25d");
+          rect(0, -8 * s, 2 * s, s, "#ffe25d");
+          rect(4 * s, -8 * s, 2 * s, s, "#ffe25d");
+        }
+        ctx.restore();
+      }
+
+      function drawWeatherEffects(w, h, now, dt) {
+        const weather = currentWeather().id;
+        if (weather === "rain") {
+          for (let i = 0; i < 95; i += 1) {
+            const x = (i * 53 + now * 0.32) % (w + 40) - 20;
+            const y = (i * 91 + now * 0.72) % h;
+            rect(x, y, 4, 15, "rgba(190, 225, 240, 0.58)");
+            rect(x - 4, y + 11, 4, 7, "rgba(190, 225, 240, 0.38)");
+          }
+        }
+        if (weather === "fog") {
+          for (let i = 0; i < 8; i += 1) {
+            const y = h * 0.24 + i * h * 0.07;
+            const x = (now * 0.018 + i * 163) % (w + 220) - 160;
+            rect(x, y, w * 0.45, 18, "rgba(226, 236, 229, 0.24)");
+            rect(x + w * 0.2, y + 22, w * 0.36, 14, "rgba(226, 236, 229, 0.18)");
+          }
+        }
+        if (weather === "heat") {
+          for (let i = 0; i < 20; i += 1) {
+            const x = (i * 71 + now * 0.05) % w;
+            const y = waterRect.y + (i % 6) * 28;
+            rect(x, y, 5, 20, "rgba(255, 228, 168, 0.22)");
+            rect(x + 9, y - 16, 5, 18, "rgba(255, 228, 168, 0.16)");
+          }
+        }
+      }
+
+      function drawParticles() {
+        fishing.particles.forEach(p => {
+          rect(p.x, p.y, p.size, p.size, p.color);
+        });
+      }
+
+      function spawnCatchParticles() {
+        const origin = fishing.cast || { x: view.w * 0.5, y: waterRect.y + waterRect.h * 0.5 };
+        for (let i = 0; i < 34; i += 1) {
+          fishing.particles.push({
+            x: origin.x,
+            y: origin.y,
+            vx: rand(-150, 150),
+            vy: rand(-180, -40),
+            life: rand(0.4, 1.1),
+            size: rand(5, 9),
+            color: i % 3 ? "#fff2a4" : "#66d7ff"
+          });
+        }
+      }
+
+      function unlockAudio() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === "suspended") audioCtx.resume();
+      }
+
+      function playSound(type) {
+        try {
+          unlockAudio();
+          const now = audioCtx.currentTime;
+          const gain = audioCtx.createGain();
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(0.08, now + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+          gain.connect(audioCtx.destination);
+          const notes = {
+            cast: [220, 260],
+            bite: [520, 660],
+            catch: [440, 660, 880],
+            break: [140, 90, 55],
+            snap: [180, 120],
+            level: [523, 659, 784, 1047],
+            boss: [80, 120, 160],
+            coin: [660, 880],
+            enchant: [390, 585, 780]
+          }[type] || [300];
+          notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            osc.type = type === "break" || type === "boss" ? "square" : "triangle";
+            osc.frequency.setValueAtTime(freq, now + i * 0.075);
+            osc.frequency.exponentialRampToValueAtTime(freq * 1.04, now + i * 0.075 + 0.06);
+            osc.connect(gain);
+            osc.start(now + i * 0.075);
+            osc.stop(now + i * 0.075 + 0.16);
+          });
+        } catch (error) {
+          // Браузер може блокувати звук до першої взаємодії.
+        }
+      }
+
+      function toast(text) {
+        const node = document.createElement("div");
+        node.className = "toast";
+        node.textContent = text;
+        els.toastLayer.appendChild(node);
+        setTimeout(() => node.remove(), 3600);
+      }
+
+      function weightedPick(items) {
+        if (!items.length) return FISH[0];
+        const total = items.reduce((sum, item) => sum + item.weight, 0);
+        if (total <= 0) return items[0].fish;
+        let roll = Math.random() * total;
+        for (const item of items) {
+          roll -= item.weight;
+          if (roll <= 0) return item.fish;
+        }
+        return items[0].fish;
+      }
+
+      function RARITY_SCALE(tierId) {
+        return { ordinary: 1, improved: 2, rare: 4, epic: 8, legendary: 16 }[tierId] || 1;
+      }
+
+      function rand(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function shortNum(value) {
+        if (value >= 1000000) return `${Math.floor(value / 100000) / 10}m`;
+        if (value >= 1000) return `${Math.floor(value / 100) / 10}k`;
+        return value;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value);
+      }
+
+      setupEvents();
+      resizeCanvas();
+      checkAchievements();
+      renderAll();
+      updateHint("Готово до закидання");
+      requestAnimationFrame(loop);
+    })();
+  </script>
 </body>
 </html>
