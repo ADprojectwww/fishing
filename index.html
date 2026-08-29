@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Кубічна Риболовля</title>
   <style>
     :root {
@@ -883,6 +883,261 @@
 
       .grid {
         grid-template-columns: 1fr;
+      }
+    }
+
+    /* Responsive layout: keep the playable area usable on phones, tablets and short screens. */
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100dvh;
+    }
+
+    .game {
+      min-height: 100dvh;
+    }
+
+    .scene {
+      min-height: clamp(280px, 52dvh, 720px);
+    }
+
+    #gameCanvas {
+      min-height: 0;
+      height: 100%;
+    }
+
+    button,
+    select,
+    input {
+      min-height: 44px;
+    }
+
+    @media (max-width: 950px) {
+      .game {
+        grid-template-rows: auto minmax(360px, 1fr) auto;
+      }
+
+      .status-card,
+      .rod-card {
+        width: 100%;
+      }
+
+      .action-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(43px, 1fr));
+        width: 100%;
+      }
+
+      .action-row > .world-badge {
+        grid-column: span 2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .dock > :first-child {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+      }
+
+      .dock > :first-child button:last-child {
+        grid-column: 1 / -1;
+      }
+
+      .hotbar {
+        justify-content: flex-start;
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: thin;
+      }
+
+      .message {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .game {
+        grid-template-rows: auto minmax(300px, 1fr) auto;
+      }
+
+      .hud {
+        gap: 8px;
+        padding: max(8px, env(safe-area-inset-top)) 8px 8px;
+      }
+
+      .dock {
+        gap: 8px;
+        padding: 8px 8px max(8px, env(safe-area-inset-bottom));
+      }
+
+      .level-badge,
+      .coin-badge,
+      .shop-badge,
+      .world-badge,
+      .rod-name {
+        padding: 7px 8px;
+      }
+
+      .xp-wrap {
+        min-width: 0;
+        flex-basis: 100%;
+      }
+
+      .rod-meter {
+        width: 100%;
+      }
+
+      .scene {
+        min-height: clamp(300px, 48dvh, 520px);
+      }
+
+      .hint {
+        top: 8px;
+        max-width: calc(100% - 16px);
+        padding: 8px 10px;
+        font-size: 11px;
+      }
+
+      .minigame {
+        bottom: 8px;
+        width: calc(100% - 16px);
+        padding: 10px;
+        gap: 7px;
+      }
+
+      .bar {
+        height: 22px;
+      }
+
+      .tension {
+        height: 28px;
+      }
+
+      dialog {
+        width: calc(100% - 12px);
+        max-height: calc(100dvh - 12px);
+        border-width: 4px;
+      }
+    }
+
+    @media (max-height: 620px) and (orientation: landscape) {
+      .game {
+        grid-template-rows: auto minmax(230px, 1fr) auto;
+      }
+
+      .hud,
+      .dock {
+        padding: 6px 8px;
+      }
+
+      .scene {
+        min-height: 230px;
+      }
+
+      .level-badge,
+      .coin-badge,
+      .shop-badge,
+      .world-badge,
+      .rod-name {
+        padding: 5px 7px;
+        font-size: 11px;
+      }
+
+      .icon-btn {
+        width: 36px;
+        height: 36px;
+        min-height: 36px;
+      }
+
+      .hot-slot {
+        width: 46px;
+        height: 46px;
+      }
+
+      .minigame {
+        bottom: 7px;
+        padding: 8px;
+      }
+    }
+
+    /* Full-HD desktop layout (including 1920 × 1080). */
+    @media (min-width: 1600px) and (min-height: 850px) {
+      .game {
+        width: min(1800px, 100%);
+        grid-template-rows: auto minmax(640px, 1fr) auto;
+      }
+
+      .hud,
+      .dock {
+        padding-left: clamp(18px, 1.4vw, 28px);
+        padding-right: clamp(18px, 1.4vw, 28px);
+      }
+
+      .hud {
+        grid-template-columns: minmax(390px, 1.15fr) minmax(400px, 1fr) auto;
+        gap: 18px;
+      }
+
+      .scene {
+        min-height: 640px;
+      }
+
+      .status-card,
+      .rod-card,
+      .action-row {
+        gap: 12px;
+      }
+
+      .level-badge,
+      .coin-badge,
+      .shop-badge,
+      .world-badge,
+      .rod-name {
+        padding: 10px 12px;
+      }
+
+      .rod-meter {
+        width: min(320px, 100%);
+      }
+
+      .minigame {
+        width: min(720px, calc(100% - 36px));
+        bottom: 26px;
+      }
+
+      .hint {
+        top: 22px;
+        max-width: min(920px, calc(100% - 36px));
+      }
+
+      .dock {
+        gap: 18px;
+      }
+
+      .hot-slot {
+        width: 64px;
+        height: 64px;
+      }
+
+      .message {
+        min-width: 300px;
+        max-width: 440px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
     }
   </style>
@@ -1964,8 +2219,11 @@
       function resizeCanvas() {
         const rect = els.canvas.getBoundingClientRect();
         const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-        els.canvas.width = Math.floor(rect.width * dpr);
-        els.canvas.height = Math.floor(rect.height * dpr);
+        // Avoid a blank canvas during mobile browser chrome/orientation transitions.
+        const cssWidth = Math.max(1, rect.width);
+        const cssHeight = Math.max(1, rect.height);
+        els.canvas.width = Math.floor(cssWidth * dpr);
+        els.canvas.height = Math.floor(cssHeight * dpr);
         view.w = els.canvas.width;
         view.h = els.canvas.height;
         view.scaleX = view.w / Math.max(1, rect.width);
@@ -2946,6 +3204,14 @@
 
       function setupEvents() {
         window.addEventListener("resize", resizeCanvas);
+        window.addEventListener("orientationchange", () => {
+          // The final viewport size is applied after the orientation event on mobile browsers.
+          requestAnimationFrame(resizeCanvas);
+        });
+        window.visualViewport?.addEventListener("resize", resizeCanvas);
+        if ("ResizeObserver" in window) {
+          new ResizeObserver(resizeCanvas).observe(els.canvas.parentElement);
+        }
         document.querySelectorAll("[data-close]").forEach(button => {
           button.addEventListener("click", () => document.getElementById(button.dataset.close).close());
         });
