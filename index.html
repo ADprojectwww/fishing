@@ -30,14 +30,24 @@
     html,
     body {
       margin: 0;
-      min-height: 100%;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
       background: #1e1a23;
-      overflow-x: hidden;
+      overflow: hidden;
       image-rendering: pixelated;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
     }
 
     body {
-      min-height: 100vh;
+      height: 100%;
+      height: 100dvh;
     }
 
     button,
@@ -83,26 +93,63 @@
 
     .game {
       width: min(1500px, 100%);
-      min-height: 100vh;
+      height: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
       margin: 0 auto;
       display: grid;
-      grid-template-rows: auto minmax(430px, 1fr) auto;
+      grid-template-rows: auto 1fr auto;
       background: #221d28;
       border-left: 5px solid var(--ink);
       border-right: 5px solid var(--ink);
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     .hud {
       position: relative;
       z-index: 5;
-      display: grid;
-      grid-template-columns: minmax(260px, 1.2fr) minmax(320px, 1fr) auto;
-      gap: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px 12px;
       align-items: center;
-      padding: 12px;
+      padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
       background: var(--panel);
       border-bottom: 5px solid var(--ink);
       box-shadow: inset 0 -4px 0 #6f4d4e;
+      flex-shrink: 0;
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+
+    .hud-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      max-width: 100%;
+    }
+
+    .hud-tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding: 2px 0;
+    }
+
+    .hud-tools::-webkit-scrollbar {
+      display: none;
     }
 
     .status-card,
@@ -228,19 +275,22 @@
 
     .scene {
       position: relative;
-      min-height: 430px;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
       overflow: hidden;
       background: #74bce0;
+      flex: 1;
     }
 
     #gameCanvas {
       display: block;
       width: 100%;
       height: 100%;
-      min-height: 430px;
+      min-height: 0;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
-      touch-action: manipulation;
+      touch-action: none;
     }
 
     .hint,
@@ -303,15 +353,33 @@
     .minigame {
       position: absolute;
       left: 50%;
-      bottom: 18px;
+      bottom: 14px;
       transform: translateX(-50%);
-      width: min(620px, calc(100% - 24px));
-      padding: 14px;
+      width: min(620px, calc(100% - 20px));
+      padding: 12px;
       display: grid;
-      gap: 10px;
+      gap: 8px;
       background: rgba(47, 39, 49, 0.96);
       border: 5px solid var(--ink);
       box-shadow: var(--shadow);
+      z-index: 10;
+    }
+
+    #reelButton {
+      background: #df514a;
+      color: #fff8df;
+      font-size: 16px;
+      letter-spacing: 1px;
+      padding: 12px;
+      min-height: 48px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    #reelButton:active {
+      background: #b9373c;
+      transform: translate(2px, 2px);
     }
 
     .mini-top {
@@ -379,18 +447,40 @@
     }
 
     .dock {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 12px;
+      display: flex;
       align-items: center;
-      padding: 12px;
+      justify-content: space-between;
+      gap: 8px 12px;
+      flex-wrap: wrap;
+      padding: 8px max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
       background: var(--panel);
       border-top: 5px solid var(--ink);
       box-shadow: inset 0 4px 0 #6f4d4e;
+      flex-shrink: 0;
+      z-index: 5;
+    }
+
+    .dock-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .dock-controls button {
+      min-height: 42px;
     }
 
     .hotbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       justify-content: center;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
       min-width: 0;
     }
 
@@ -398,8 +488,8 @@
     .inv-slot,
     .enchant-slot {
       position: relative;
-      width: 58px;
-      height: 58px;
+      width: 52px;
+      height: 52px;
       border: 4px solid var(--ink);
       background: #7d725f;
       box-shadow: inset 4px 4px 0 #a99b7c, inset -4px -4px 0 #4c4437;
@@ -407,11 +497,14 @@
       place-items: center;
       color: #17151b;
       font-weight: 900;
+      flex-shrink: 0;
+      touch-action: manipulation;
     }
 
-    .hot-slot.active {
+    .hot-slot.active,
+    .inv-slot.selected {
       outline: 4px solid #fff1a4;
-      z-index: 1;
+      z-index: 2;
     }
 
     .hot-slot small,
@@ -425,28 +518,60 @@
     }
 
     .message {
-      min-width: 230px;
+      flex: 1;
+      min-width: 180px;
+      max-width: 440px;
       border: 4px solid var(--ink);
       background: #201c28;
-      padding: 10px 12px;
+      padding: 6px 10px;
       box-shadow: 3px 3px 0 #6f4d4e;
       font-weight: 800;
+      font-size: 13px;
       line-height: 1.25;
     }
 
+    .inventory-quick-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 8px 10px;
+      background: #201c28;
+      border: 4px solid var(--ink);
+    }
+
+    .selected-item-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
     dialog {
-      width: min(980px, calc(100% - 22px));
-      max-height: min(820px, calc(100vh - 22px));
+      box-sizing: border-box;
+      position: fixed;
+      inset: 0;
+      margin: auto;
+      width: min(960px, calc(100vw - 24px));
+      max-width: calc(100vw - 24px);
+      max-height: min(840px, calc(100dvh - 24px));
       padding: 0;
-      border: 6px solid var(--ink);
+      border: 4px solid var(--ink);
       border-radius: 0;
       background: var(--panel);
       color: var(--text);
       box-shadow: var(--shadow);
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    dialog[open] {
+      display: flex;
+      flex-direction: column;
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.65);
       backdrop-filter: blur(2px);
     }
 
@@ -455,22 +580,67 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      padding: 13px;
+      padding: 12px 14px;
       background: #7d4a48;
       border-bottom: 5px solid var(--ink);
+      flex-shrink: 0;
     }
 
     .modal-head h2 {
       margin: 0;
-      font-size: 22px;
+      font-size: 20px;
     }
 
     .modal-body {
-      padding: 14px;
+      padding: 12px;
       display: grid;
-      gap: 14px;
-      max-height: calc(100vh - 130px);
-      overflow: auto;
+      gap: 12px;
+      max-height: calc(100dvh - 110px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+
+    .controls-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .controls-section {
+      padding: 12px;
+      background: #201c28;
+      border: 3px solid var(--ink);
+    }
+
+    .controls-section h3 {
+      margin: 0 0 8px;
+      color: var(--gold);
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 7px 0;
+      border-top: 1px solid #5f5363;
+    }
+
+    .control-row:first-of-type {
+      border-top: 0;
+    }
+
+    kbd {
+      flex-shrink: 0;
+      padding: 3px 7px;
+      border: 2px solid var(--ink);
+      background: #f7e7b0;
+      color: #1a1520;
+      box-shadow: 2px 2px 0 #6f4d4e;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
     }
 
     .menu-tabs {
@@ -575,8 +745,8 @@
 
     .inventory-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+      gap: 6px;
       align-items: stretch;
     }
 
@@ -616,9 +786,10 @@
       width: 100%;
       aspect-ratio: 1;
       height: auto;
-      min-height: 68px;
+      min-height: 54px;
       cursor: grab;
       padding: 3px;
+      box-sizing: border-box;
     }
 
     .inv-slot:active {
@@ -667,12 +838,16 @@
     }
 
     .enchant-slot {
-      width: 112px;
-      height: 76px;
+      flex: 1;
+      min-width: 60px;
+      max-width: 112px;
+      height: 64px;
+      font-size: 11px;
       text-align: center;
-      padding: 6px;
+      padding: 4px;
       color: #211715;
       background: #8e8069;
+      box-sizing: border-box;
     }
 
     .toast-layer {
@@ -827,24 +1002,49 @@
     .rarity-epic { color: #d89bff; }
     .rarity-legendary { color: #ffe078; }
 
+    /* Responsive Layout for Tablets, Phones, Ultrawide & Landscape */
     @media (max-width: 950px) {
       .hud {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
       }
 
+      .status-card,
+      .rod-card,
       .action-row {
+        width: 100%;
+      }
+
+      .hud-badges {
+        width: 100%;
         justify-content: flex-start;
-        flex-wrap: wrap;
+      }
+
+      .hud-tools {
+        width: 100%;
       }
 
       .dock {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+
+      .dock-controls {
+        justify-content: center;
+        width: 100%;
       }
 
       .hotbar {
-        justify-content: flex-start;
-        overflow-x: auto;
-        padding-bottom: 4px;
+        width: 100%;
+      }
+
+      .message {
+        max-width: 100%;
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
       }
 
       .enchant-layout,
@@ -855,189 +1055,18 @@
 
     @media (max-width: 600px) {
       .game {
-        border: 0;
-      }
-
-      .hud,
-      .dock {
-        padding: 8px;
-      }
-
-      .level-badge,
-      .coin-badge,
-      .shop-badge,
-      .rod-name,
-      .message,
-      .hint {
-        font-size: 13px;
-      }
-
-      .hot-slot {
-        width: 50px;
-        height: 50px;
-      }
-
-      .minigame {
-        bottom: 8px;
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Responsive layout: keep the playable area usable on phones, tablets and short screens. */
-    html {
-      -webkit-text-size-adjust: 100%;
-      text-size-adjust: 100%;
-    }
-
-    body {
-      min-height: 100dvh;
-    }
-
-    .game {
-      min-height: 100dvh;
-    }
-
-    .scene {
-      min-height: clamp(280px, 52dvh, 720px);
-    }
-
-    #gameCanvas {
-      min-height: 0;
-      height: 100%;
-    }
-
-    button,
-    select,
-    input {
-      min-height: 44px;
-    }
-
-    @media (max-width: 950px) {
-      .game {
-        grid-template-rows: auto minmax(360px, 1fr) auto;
-      }
-
-      .status-card,
-      .rod-card {
-        width: 100%;
-      }
-
-      .action-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(43px, 1fr));
-        width: 100%;
-      }
-
-      .action-row > .world-badge {
-        grid-column: span 2;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .dock > :first-child {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        width: 100%;
-      }
-
-      .dock > :first-child button:last-child {
-        grid-column: 1 / -1;
-      }
-
-      .hotbar {
-        justify-content: flex-start;
-        max-width: 100%;
-        overflow-x: auto;
-        overscroll-behavior-x: contain;
-        scrollbar-width: thin;
-      }
-
-      .message {
-        width: 100%;
-        min-width: 0;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .game {
-        grid-template-rows: auto minmax(300px, 1fr) auto;
+        border-left: none;
+        border-right: none;
       }
 
       .hud {
-        gap: 8px;
-        padding: max(8px, env(safe-area-inset-top)) 8px 8px;
+        padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) 6px max(6px, env(safe-area-inset-left));
+        gap: 6px;
       }
 
       .dock {
-        gap: 8px;
-        padding: 8px 8px max(8px, env(safe-area-inset-bottom));
-      }
-
-      .level-badge,
-      .coin-badge,
-      .shop-badge,
-      .world-badge,
-      .rod-name {
-        padding: 7px 8px;
-      }
-
-      .xp-wrap {
-        min-width: 0;
-        flex-basis: 100%;
-      }
-
-      .rod-meter {
-        width: 100%;
-      }
-
-      .scene {
-        min-height: clamp(300px, 48dvh, 520px);
-      }
-
-      .hint {
-        top: 8px;
-        max-width: calc(100% - 16px);
-        padding: 8px 10px;
-        font-size: 11px;
-      }
-
-      .minigame {
-        bottom: 8px;
-        width: calc(100% - 16px);
-        padding: 10px;
-        gap: 7px;
-      }
-
-      .bar {
-        height: 22px;
-      }
-
-      .tension {
-        height: 28px;
-      }
-
-      dialog {
-        width: calc(100% - 12px);
-        max-height: calc(100dvh - 12px);
-        border-width: 4px;
-      }
-    }
-
-    @media (max-height: 620px) and (orientation: landscape) {
-      .game {
-        grid-template-rows: auto minmax(230px, 1fr) auto;
-      }
-
-      .hud,
-      .dock {
-        padding: 6px 8px;
-      }
-
-      .scene {
-        min-height: 230px;
+        padding: 6px max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+        gap: 6px;
       }
 
       .level-badge,
@@ -1050,9 +1079,32 @@
       }
 
       .icon-btn {
-        width: 36px;
-        height: 36px;
-        min-height: 36px;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+      }
+
+      .dock-controls {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        width: 100%;
+        gap: 4px;
+      }
+
+      .dock-controls button {
+        padding: 7px 4px;
+        font-size: 11px;
+        min-height: 40px;
+        text-align: center;
+      }
+
+      .dock-controls #castButton {
+        grid-column: 1 / -1;
+        font-size: 13px;
+        font-weight: 900;
+        padding: 9px;
+        min-height: 42px;
       }
 
       .hot-slot {
@@ -1060,38 +1112,94 @@
         height: 46px;
       }
 
+      .hint {
+        top: 6px;
+        font-size: 11px;
+        padding: 6px 10px;
+        max-width: calc(100% - 16px);
+      }
+
       .minigame {
-        bottom: 7px;
+        bottom: 6px;
+        width: calc(100% - 12px);
         padding: 8px;
+        gap: 6px;
+      }
+
+      .bar {
+        height: 20px;
+      }
+
+      .tension {
+        height: 24px;
+      }
+
+      #reelButton {
+        min-height: 44px;
+        padding: 8px;
+        font-size: 15px;
+      }
+
+      .grid,
+      .wide-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-body {
+        max-height: calc(100dvh - 80px);
+        padding: 8px;
+        gap: 8px;
       }
     }
 
-    /* Full-HD desktop layout (including 1920 × 1080). */
-    @media (min-width: 1600px) and (min-height: 850px) {
-      .game {
-        width: min(1800px, 100%);
-        grid-template-rows: auto minmax(640px, 1fr) auto;
-      }
-
-      .hud,
-      .dock {
-        padding-left: clamp(18px, 1.4vw, 28px);
-        padding-right: clamp(18px, 1.4vw, 28px);
-      }
-
+    @media (max-height: 520px) and (orientation: landscape) {
       .hud {
-        grid-template-columns: minmax(390px, 1.15fr) minmax(400px, 1fr) auto;
-        gap: 18px;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        padding: 4px max(8px, env(safe-area-inset-right)) 4px max(8px, env(safe-area-inset-left));
+        gap: 6px;
       }
 
-      .scene {
-        min-height: 640px;
+      .status-card {
+        flex-wrap: nowrap;
+        gap: 4px;
       }
 
-      .status-card,
-      .rod-card,
-      .action-row {
-        gap: 12px;
+      .hearts {
+        min-width: 0;
+        gap: 2px;
+      }
+
+      .heart {
+        width: 14px;
+        height: 14px;
+      }
+
+      .xp-wrap {
+        min-width: 80px;
+        height: 22px;
+      }
+
+      .xp-wrap span {
+        font-size: 10px;
+      }
+
+      .rod-card {
+        flex-wrap: nowrap;
+        gap: 4px;
+      }
+
+      .rod-meter {
+        width: 110px;
+        height: 20px;
+      }
+
+      .rod-meter > span {
+        font-size: 10px;
       }
 
       .level-badge,
@@ -1099,35 +1207,89 @@
       .shop-badge,
       .world-badge,
       .rod-name {
-        padding: 10px 12px;
+        padding: 4px 6px;
+        font-size: 10px;
       }
 
-      .rod-meter {
-        width: min(320px, 100%);
-      }
-
-      .minigame {
-        width: min(720px, calc(100% - 36px));
-        bottom: 26px;
-      }
-
-      .hint {
-        top: 22px;
-        max-width: min(920px, calc(100% - 36px));
+      .icon-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        font-size: 12px;
       }
 
       .dock {
-        gap: 18px;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        padding: 4px max(8px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+        gap: 6px;
+      }
+
+      .dock-controls {
+        flex-wrap: nowrap;
+        gap: 4px;
+      }
+
+      .dock-controls button {
+        padding: 5px 7px;
+        min-height: 32px;
+        font-size: 11px;
       }
 
       .hot-slot {
-        width: 64px;
-        height: 64px;
+        width: 36px;
+        height: 36px;
       }
 
       .message {
-        min-width: 300px;
-        max-width: 440px;
+        display: none;
+      }
+
+      .minigame {
+        bottom: 4px;
+        padding: 6px;
+        gap: 4px;
+      }
+
+      .bar {
+        height: 16px;
+      }
+
+      .tension {
+        height: 18px;
+      }
+
+      #reelButton {
+        min-height: 34px;
+        padding: 5px;
+        font-size: 13px;
+      }
+
+      .modal-body {
+        max-height: calc(100dvh - 60px);
+        padding: 8px;
+      }
+    }
+
+    @media (min-width: 1600px) and (min-height: 850px) {
+      .game {
+        width: min(1800px, 100%);
+      }
+
+      .hud,
+      .dock {
+        padding-left: clamp(16px, 1.5vw, 32px);
+        padding-right: clamp(16px, 1.5vw, 32px);
+      }
+
+      .hot-slot {
+        width: 62px;
+        height: 62px;
+      }
+
+      .message {
+        max-width: 480px;
       }
     }
 
@@ -1163,22 +1325,29 @@
       </div>
 
       <div class="action-row">
-        <span class="coin-badge"><strong id="coinValue">0</strong> Coins</span>
-        <span class="shop-badge">Shop LVL <strong id="shopLevelValue">1</strong></span>
-        <span class="world-badge" id="locationBadge">Лісове озеро</span>
-        <span class="world-badge" id="weatherBadge">Сонячно</span>
-        <span class="world-badge" id="timeBadge">День</span>
-        <button class="icon-btn" id="inventoryButton" title="Інвентар" aria-label="Інвентар">I</button>
-        <button class="icon-btn" id="shopButton" title="Магазин" aria-label="Магазин">$</button>
-        <button class="icon-btn" id="grindstoneButton" title="Точило" aria-label="Точило">G</button>
-        <button class="icon-btn" id="locationButton" title="Локації" aria-label="Локації">M</button>
-        <button class="icon-btn" id="dexButton" title="Fish Dex" aria-label="Fish Dex">D</button>
-        <button class="icon-btn" id="questButton" title="Квести" aria-label="Квести">Q</button>
-        <button class="icon-btn" id="craftButton" title="Крафт" aria-label="Крафт">C</button>
-        <button class="icon-btn" id="aquariumButton" title="Акваріум" aria-label="Акваріум">A</button>
-        <button class="icon-btn" id="achievementsButton" title="Досягнення" aria-label="Досягнення">*</button>
-        <button class="icon-btn" id="saveButton" title="Зберегти" aria-label="Зберегти">S</button>
-        <button class="icon-btn" id="saveToolsButton" title="Імпорт / експорт" aria-label="Імпорт / експорт">IO</button>
+        <div class="hud-badges">
+          <span class="coin-badge"><strong id="coinValue">0</strong> Coins</span>
+          <span class="shop-badge">Shop LVL <strong id="shopLevelValue">1</strong></span>
+          <span class="world-badge" id="locationBadge">Лісове озеро</span>
+          <span class="world-badge" id="weatherBadge">Сонячно</span>
+          <span class="world-badge" id="timeBadge">День</span>
+        </div>
+        <div class="hud-tools" id="hudTools">
+          <button class="icon-btn" id="inventoryButton" title="Інвентар [I]" aria-label="Інвентар">🎒</button>
+          <button class="icon-btn" id="shopButton" title="Магазин [$]" aria-label="Магазин">🛒</button>
+          <button class="icon-btn" id="grindstoneButton" title="Точило [G]" aria-label="Точило">⚙</button>
+          <button class="icon-btn" id="locationButton" title="Локації [M]" aria-label="Локації">🗺</button>
+          <button class="icon-btn" id="dexButton" title="Fish Dex [F]" aria-label="Fish Dex">📖</button>
+          <button class="icon-btn" id="questButton" title="Квести [Q]" aria-label="Квести">📜</button>
+          <button class="icon-btn" id="craftButton" title="Крафт [C]" aria-label="Крафт">🔨</button>
+          <button class="icon-btn" id="aquariumButton" title="Акваріум [A]" aria-label="Акваріум">🐠</button>
+          <button class="icon-btn" id="achievementsButton" title="Досягнення [*]" aria-label="Досягнення">🏆</button>
+          <button class="icon-btn" id="saveButton" title="Зберегти [S]" aria-label="Зберегти">💾</button>
+          <button class="icon-btn" id="saveToolsButton" title="Імпорт / експорт" aria-label="Імпорт / експорт">⇄</button>
+          <button class="icon-btn" id="harborButton" title="Причал: човен, ринок і події" aria-label="Причал">⚓</button>
+          <button class="icon-btn" id="controlsButton" title="Управління" aria-label="Управління">?</button>
+          <button class="icon-btn" id="fullscreenButton" title="Повний екран [F11]" aria-label="Повний екран">⛶</button>
+        </div>
       </div>
     </section>
 
@@ -1207,12 +1376,12 @@
     </section>
 
     <section class="dock" aria-label="Панель дій">
-      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+      <div class="dock-controls">
         <button id="moveLeftBtn" title="Ходити/плавати ліворуч (A)">◄ A</button>
         <button id="moveRightBtn" title="Ходити/плавати праворуч (D)">► D</button>
         <button id="boardBoatBtn" title="Сісти в човен / Вийти / Дія (E)">🚣 [E] Дія</button>
         <button id="placeNetBtn" title="Встановити риболовну сіть (N)">🕸 [N] Сіть</button>
-        <button id="castButton">Закинути</button>
+        <button id="castButton" style="background:#ffd560; color:#16131a;">🎣 Закинути</button>
       </div>
       <div class="hotbar" id="hotbar"></div>
       <div class="message" id="message">Персонаж на березі. Натисніть A/D для руху, E — човен/дія.</div>
@@ -1226,6 +1395,10 @@
     </div>
     <div class="modal-body">
       <div class="inventory-summary" id="inventorySummary"></div>
+      <div class="inventory-quick-actions" id="inventoryQuickActions">
+        <button id="sellAllFishBtn" title="Продати всю наявну рибу">💰 Продати всю рибу</button>
+        <div id="selectedItemActions" class="selected-item-actions"></div>
+      </div>
       <div class="enchant-layout">
         <div class="card">
           <h3>Вибрана вудочка</h3>
@@ -1365,6 +1538,57 @@
         <button id="importSaveButton">Імпорт save</button>
       </div>
       <textarea id="saveText" class="save-textarea" spellcheck="false" placeholder="Тут буде код збереження"></textarea>
+    </div>
+  </dialog>
+
+  <dialog id="controlsModal">
+    <div class="modal-head">
+      <h2>Управління</h2>
+      <button class="icon-btn" data-close="controlsModal" aria-label="Закрити">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="controls-list">
+        <section class="controls-section">
+          <h3>Рух і світ</h3>
+          <div class="control-row"><span>Рухатися берегом або плисти на човні</span><kbd>A / ← &nbsp; D / →</kbd></div>
+          <div class="control-row"><span>Сісти в човен, вийти з нього або взаємодіяти</span><kbd>E</kbd></div>
+          <div class="control-row"><span>Встановити риболовну сіть</span><kbd>N</kbd></div>
+          <div class="control-row"><span>Клацнути по березі — перейти в обране місце</span><kbd>ЛКМ / дотик</kbd></div>
+        </section>
+        <section class="controls-section">
+          <h3>Риболовля</h3>
+          <div class="control-row"><span>Закинути вудку / підсікти, коли риба клює</span><kbd>Пробіл або ЛКМ</kbd></div>
+          <div class="control-row"><span>Тягнути рибу, утримуючи натискання</span><kbd>Пробіл / «ТЯГНУТИ»</kbd></div>
+          <div class="control-row"><span>Цільтесь у воду курсором або дотиком перед закиданням</span><kbd>ЛКМ / дотик</kbd></div>
+        </section>
+        <section class="controls-section">
+          <h3>Вікна гри</h3>
+          <div class="control-row"><span>Інвентар</span><kbd>I</kbd></div>
+          <div class="control-row"><span>Точило</span><kbd>G</kbd></div>
+          <div class="control-row"><span>Локації</span><kbd>M</kbd></div>
+          <div class="control-row"><span>Fish Dex</span><kbd>F</kbd></div>
+          <div class="control-row"><span>Квести</span><kbd>Q</kbd></div>
+          <div class="control-row"><span>Крафт</span><kbd>C</kbd></div>
+          <div class="control-row"><span>Акваріум</span><kbd>U</kbd></div>
+          <div class="control-row"><span>Зберегти прогрес</span><kbd>S</kbd></div>
+          <div class="control-row"><span>Магазин, досягнення, збереження та повний екран</span><kbd>Кнопки зверху</kbd></div>
+        </section>
+        <section class="controls-section">
+          <h3>Порада</h3>
+          <p>Тримайте натяг у зеленій зоні. Піймана риба потрапляє до інвентарю — продайте її там, щоб отримати Coins.</p>
+        </section>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="harborModal">
+    <div class="modal-head">
+      <h2>⚓ Причал</h2>
+      <button class="icon-btn" data-close="harborModal" aria-label="Закрити">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="inventory-summary" id="harborSummary"></div>
+      <div class="wide-grid" id="harborGrid"></div>
     </div>
   </dialog>
 
@@ -1601,6 +1825,23 @@
         { level: 100, id: "boss_legend", location: "lava", name: "Легендарна Риба", strength: 1220, hp: 1450, xp: 20000, coins: 25000, color: "#ffe271", accent: "#ffffff" }
       ];
 
+      const MINI_BOSSES = [
+        { id: "storm_pike", name: "Грозова щука", strength: 94, xp: 340, coins: 520, min: 4, max: 11, color: "#6c88a0", accent: "#dff7ff" },
+        { id: "night_carp", name: "Нічний короп", strength: 88, xp: 300, coins: 460, min: 5, max: 13, color: "#645283", accent: "#ffd87a" }
+      ];
+
+      const TALISMANS = {
+        sun: { id: "sun", name: "Сонячний талісман", cost: 700, desc: "+12% до вартості продажу.", icon: "☀" },
+        moon: { id: "moon", name: "Місячний талісман", cost: 850, desc: "+8% шансів на золоту рибу та мінібосів.", icon: "☾" },
+        tide: { id: "tide", name: "Талісман припливу", cost: 650, desc: "+15% швидкості човна.", icon: "≈" }
+      };
+
+      const BOAT_UPGRADES = [
+        { level: 1, cost: 600, name: "Швидкі весла", desc: "+25% швидкості човна." },
+        { level: 2, cost: 1400, name: "Тримачі для сітей", desc: "+2 місця для сітей." },
+        { level: 3, cost: 3200, name: "Далеке плавання", desc: "Доступ до далеких водойм." }
+      ];
+
       // Особливі нагороди за рівні: монети, вудочки, зачарування, ремонт і сундуки.
       const SPECIAL_REWARDS = {
         5: { coins: 500, text: "500 Coins" },
@@ -1650,10 +1891,10 @@
       // Досягнення: автоматично відкриваються і одразу видають нагороду.
       const ACHIEVEMENTS = [
         { id: "first_fish", name: "Перша риба", desc: "Спіймай першу рибу.", reward: { coins: 60, xp: 35 }, progress: () => state.stats.totalCaught, target: 1 },
-        { id: "hundred_fish", name: "100 уловів", desc: "Спіймай 100 риб.", reward: { coins: 2200, resources: { crystal: 4 } }, progress: () => state.stats.totalCaught, target: 100 },
+        { id: "hundred_fish", name: "100 уловів", desc: "Спіймай 100 риб.", reward: { coins: 2200, resources: { crystal: 4 }, cosmetic: "river_rod" }, progress: () => state.stats.totalCaught, target: 100 },
         { id: "boss_down", name: "Перший бос", desc: "Переможи рибу-боса.", reward: { rod: "rare", xp: 800 }, progress: () => state.stats.bossesCaught, target: 1 },
         { id: "legend_caught", name: "Легендарний трофей", desc: "Спіймай легендарну рибу.", reward: { coins: 1800, enchant: "wealth" }, progress: () => state.stats.catchesByRarity.legendary || 0, target: 1 },
-        { id: "all_places", name: "Карта берегів", desc: "Відкрий усі локації.", reward: { coins: 3000, resources: { core: 1 } }, progress: () => state.unlockedLocations.length, target: Object.keys(LOCATIONS).length },
+        { id: "all_places", name: "Карта берегів", desc: "Відкрий усі локації.", reward: { coins: 3000, resources: { core: 1 }, cosmetic: "explorer_coat" }, progress: () => state.unlockedLocations.length, target: Object.keys(LOCATIONS).length },
         { id: "dex_master", name: "Дослідник Dex", desc: "Відкрий 12 видів риби.", reward: { coins: 1600, xp: 900, enchant: "luck" }, progress: () => caughtSpeciesCount(), target: 12 },
         { id: "aquarist", name: "Акваріуміст", desc: "Посели 5 риб в акваріум.", reward: { coins: 900, xp: 420 }, progress: () => state.aquarium.length, target: 5 },
         { id: "crafter", name: "Майстер крафту", desc: "Створи 5 предметів.", reward: { coins: 1100, resources: { repair: 2 } }, progress: () => state.stats.crafted, target: 5 }
@@ -1676,6 +1917,13 @@
         dex: {},
         aquarium: [],
         aquariumLast: Date.now(),
+        boat: { level: 0, color: "#ba7046" },
+        talismans: [],
+        equippedTalisman: null,
+        trophies: [],
+        cosmetics: [],
+        daily: { date: "", catches: 0, claimed: false, reputation: 0 },
+        tournament: { active: false, endsAt: 0, catches: 0, bestWeight: 0, claimed: false },
         enchantments: ["luck"],
         resources: { scale: 0, crystal: 0, repair: 1, core: 0 },
         defeatedBosses: [],
@@ -1696,8 +1944,14 @@
         hotbar: ["rod", "coins", "fish", "enchant", "repair", "crystal", "scale", "core", "chest"]
       });
 
+      let targetPlayerX = null;
+      let selectedInventoryItem = null;
+
       const els = {
         canvas: document.getElementById("gameCanvas"),
+        fullscreenButton: document.getElementById("fullscreenButton"),
+        sellAllFishBtn: document.getElementById("sellAllFishBtn"),
+        selectedItemActions: document.getElementById("selectedItemActions"),
         hearts: document.getElementById("hearts"),
         levelValue: document.getElementById("levelValue"),
         xpFill: document.getElementById("xpFill"),
@@ -1734,6 +1988,8 @@
         aquariumButton: document.getElementById("aquariumButton"),
         achievementsButton: document.getElementById("achievementsButton"),
         saveToolsButton: document.getElementById("saveToolsButton"),
+        harborButton: document.getElementById("harborButton"),
+        controlsButton: document.getElementById("controlsButton"),
         saveButton: document.getElementById("saveButton"),
         inventoryModal: document.getElementById("inventoryModal"),
         shopModal: document.getElementById("shopModal"),
@@ -1745,6 +2001,8 @@
         aquariumModal: document.getElementById("aquariumModal"),
         achievementsModal: document.getElementById("achievementsModal"),
         saveToolsModal: document.getElementById("saveToolsModal"),
+        harborModal: document.getElementById("harborModal"),
+        controlsModal: document.getElementById("controlsModal"),
         inventorySummary: document.getElementById("inventorySummary"),
         selectedRodDetails: document.getElementById("selectedRodDetails"),
         rodEnchantSlots: document.getElementById("rodEnchantSlots"),
@@ -1776,6 +2034,8 @@
         exportSaveButton: document.getElementById("exportSaveButton"),
         importSaveButton: document.getElementById("importSaveButton"),
         saveText: document.getElementById("saveText"),
+        harborSummary: document.getElementById("harborSummary"),
+        harborGrid: document.getElementById("harborGrid"),
         toastLayer: document.getElementById("toastLayer")
       };
 
@@ -1785,6 +2045,7 @@
       const waterRect = { x: 0, y: 250, w: 1280, h: 315 };
 
       let state = loadGame();
+      refreshDailySystems();
       let activeShopTab = "rods";
       let activeDexFilter = "all";
       let dragPayload = null;
@@ -1810,7 +2071,7 @@
       const boat   = { x: 0.46 };
       const keys   = { left: false, right: false };
       if (!state.nets) state.nets = [];
-      if (!state.netsOwned || state.netsOwned < 2) state.netsOwned = 2;
+      if (!Number.isFinite(state.netsOwned)) state.netsOwned = 2;
       let lastNetUpdate = performance.now();
 
       function createRod(tierId) {
@@ -1876,6 +2137,14 @@
           merged.dex = merged.dex && typeof merged.dex === "object" ? merged.dex : {};
           merged.aquarium = Array.isArray(merged.aquarium) ? merged.aquarium.slice(0, 40) : [];
           merged.aquariumLast = Number.isFinite(merged.aquariumLast) ? merged.aquariumLast : Date.now();
+          merged.boat = { ...fresh.boat, ...(merged.boat || {}) };
+          merged.boat.level = clamp(Math.floor(merged.boat.level || 0), 0, BOAT_UPGRADES.length);
+          merged.talismans = Array.isArray(merged.talismans) ? merged.talismans.filter(id => TALISMANS[id]) : [];
+          merged.equippedTalisman = merged.talismans.includes(merged.equippedTalisman) ? merged.equippedTalisman : null;
+          merged.trophies = Array.isArray(merged.trophies) ? merged.trophies.slice(0, 30) : [];
+          merged.cosmetics = Array.isArray(merged.cosmetics) ? merged.cosmetics : [];
+          merged.daily = { ...fresh.daily, ...(merged.daily || {}) };
+          merged.tournament = { ...fresh.tournament, ...(merged.tournament || {}) };
           merged.enchantments = Array.isArray(merged.enchantments) ? merged.enchantments.filter(id => ENCHANTS[id]) : [];
           merged.defeatedBosses = Array.isArray(merged.defeatedBosses) ? merged.defeatedBosses : [];
           merged.claimedRewards = Array.isArray(merged.claimedRewards) ? merged.claimedRewards : [];
@@ -1915,6 +2184,91 @@
         const minutes = Math.max(0, (Date.now() - state.aquariumLast) / 60000);
         const base = state.aquarium.reduce((sum, fish) => sum + Math.max(2, fish.value * 0.035), 0);
         return Math.floor(base * minutes);
+      }
+
+      function todayKey() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function marketMultiplier() {
+        const seed = [...todayKey()].reduce((total, char) => total + char.charCodeAt(0), 0);
+        return 0.8 + (seed % 41) / 100;
+      }
+
+      function talismanActive(id) {
+        return state.equippedTalisman === id;
+      }
+
+      function saleValue(fish) {
+        const talismanBonus = talismanActive("sun") ? 1.12 : 1;
+        return Math.max(1, Math.floor(fish.value * marketMultiplier() * talismanBonus));
+      }
+
+      function refreshDailySystems() {
+        const today = todayKey();
+        if (state.daily.date !== today) {
+          state.daily.date = today;
+          state.daily.catches = 0;
+          state.daily.claimed = false;
+        }
+        if (state.tournament.active && Date.now() >= state.tournament.endsAt) state.tournament.active = false;
+      }
+
+      function buyBoatUpgrade() {
+        const upgrade = BOAT_UPGRADES[state.boat.level];
+        if (!upgrade || state.coins < upgrade.cost) return;
+        state.coins -= upgrade.cost;
+        state.boat.level += 1;
+        toast(`Човен покращено: ${upgrade.name}`);
+        renderAll();
+        saveGame();
+      }
+
+      function buyOrEquipTalisman(id) {
+        const talisman = TALISMANS[id];
+        if (!talisman) return;
+        if (!state.talismans.includes(id)) {
+          if (state.coins < talisman.cost) return;
+          state.coins -= talisman.cost;
+          state.talismans.push(id);
+        }
+        state.equippedTalisman = state.equippedTalisman === id ? null : id;
+        setMessage(state.equippedTalisman ? `Активовано: ${talisman.name}.` : "Талісман знято.");
+        renderAll();
+        saveGame();
+      }
+
+      function startTournament() {
+        if (state.tournament.active) return;
+        state.tournament = { active: true, endsAt: Date.now() + 10 * 60 * 1000, catches: 0, bestWeight: 0, claimed: false };
+        toast("Турнір розпочато! За 10 хвилин спіймайте щонайменше 3 риби.");
+        renderAll();
+        saveGame();
+      }
+
+      function claimTournament() {
+        const tournament = state.tournament;
+        if (!tournament.active || tournament.claimed || tournament.catches < 3) return;
+        const reward = 300 + Math.floor(tournament.bestWeight * 35);
+        state.coins += reward;
+        state.stats.coinsEarned += reward;
+        tournament.claimed = true;
+        tournament.active = false;
+        toast(`Турнір завершено! Нагорода: ${reward} Coins.`);
+        renderAll();
+        saveGame();
+      }
+
+      function claimDailyQuest() {
+        if (state.daily.claimed || state.daily.catches < 5) return;
+        state.daily.claimed = true;
+        state.daily.reputation += 1;
+        state.coins += 280;
+        state.stats.coinsEarned += 280;
+        if (state.daily.reputation === 3 && !state.cosmetics.includes("blue_boat")) state.cosmetics.push("blue_boat");
+        toast("Завдання рибалки виконано: +280 Coins і репутація.");
+        renderAll();
+        saveGame();
       }
 
       function caughtSpeciesCount() {
@@ -1996,6 +2350,10 @@
         if (reward.xp) addXp(reward.xp);
         if (reward.rod) state.rods.push(createRod(reward.rod));
         if (reward.enchant) state.enchantments.push(reward.enchant);
+        if (reward.cosmetic && !state.cosmetics.includes(reward.cosmetic)) {
+          state.cosmetics.push(reward.cosmetic);
+          toast("Відкрито косметичну нагороду!");
+        }
         if (reward.resources) {
           Object.entries(reward.resources).forEach(([id, amount]) => {
             state.resources[id] = (state.resources[id] || 0) + amount;
@@ -2033,6 +2391,10 @@
           setMessage(`Локація: ${location.name}. Тут водяться: ${getLocationFishNames(location)}.`);
           renderAll();
           saveGame();
+          return;
+        }
+        if (["moonbay", "lava"].includes(id) && state.boat.level < 3) {
+          toast("Для цієї далекої водойми потрібне покращення човна «Далеке плавання».");
           return;
         }
         if (state.level < location.level || state.coins < location.cost) return;
@@ -2219,7 +2581,6 @@
       function resizeCanvas() {
         const rect = els.canvas.getBoundingClientRect();
         const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-        // Avoid a blank canvas during mobile browser chrome/orientation transitions.
         const cssWidth = Math.max(1, rect.width);
         const cssHeight = Math.max(1, rect.height);
         els.canvas.width = Math.floor(cssWidth * dpr);
@@ -2228,6 +2589,9 @@
         view.h = els.canvas.height;
         view.scaleX = view.w / Math.max(1, rect.width);
         view.scaleY = view.h / Math.max(1, rect.height);
+        view.dpr = dpr;
+        // Aspect-aware scale: keeps sprites balanced across tall, square, and wide screens
+        view.unit = Math.max(2.4, Math.min(view.w / 180, view.h / 100));
         waterRect.x = 0;
         waterRect.y = view.h * 0.35;
         waterRect.w = view.w;
@@ -2325,6 +2689,7 @@
           weight: Number(weight.toFixed(2)),
           value,
           boss: !!fish.boss,
+          golden: !!fish.golden,
           location: state.location,
           weather: state.weather,
           time: currentTimeSegment().id,
@@ -2334,13 +2699,21 @@
         };
         state.fish.unshift(entry);
         state.fish = state.fish.slice(0, 220);
-        state.coins += value;
-        state.stats.coinsEarned += value;
         state.stats.totalCaught += 1;
+        state.daily.catches += 1;
+        if (state.tournament.active) {
+          state.tournament.catches += 1;
+          state.tournament.bestWeight = Math.max(state.tournament.bestWeight, entry.weight);
+        }
         recordCatch(fish, entry);
         addXp(xp);
         state.resources.scale += fish.boss ? 8 : Math.max(1, Math.floor(RARITY[rarity].mult));
         if (rarity === "epic" || rarity === "legendary") state.resources.crystal += 1;
+        if (fish.golden) {
+          state.resources.crystal += 2;
+          state.trophies.push(`Золотий трофей: ${fish.name}`);
+          toast("✨ Золота риба! +2 кристали та трофей.");
+        }
         if (fish.boss) {
           state.resources.core += 1;
           state.stats.bossesCaught += 1;
@@ -2348,6 +2721,7 @@
           state.enchantments.push(randomEnchant(fish.level));
           const bossTier = fish.level >= 40 ? "epic" : fish.level >= 20 ? "rare" : "improved";
           if (Math.random() < 0.35) state.rods.push(createRod(bossTier));
+          if (fish.miniBoss) state.trophies.push(`Мінібос: ${fish.name}`);
         }
         rod.durability = Math.max(0, rod.durability - (fish.boss ? 13 : 4) * stats.durabilityLoss);
         fishing.phase = "idle";
@@ -2356,7 +2730,7 @@
         fishing.holding = false;
         els.minigame.classList.add("hidden");
         els.bossBanner.classList.add("hidden");
-        setMessage(`Спіймано: ${fish.name}, ${entry.weight} кг. +${value} Coins, +${xp} XP.`);
+        setMessage(`Спіймано: ${fish.name}, ${entry.weight} кг. Вартість: ${value} Coins, +${xp} XP.`);
         updateHint("Улов у інвентарі");
         spawnCatchParticles();
         playSound("catch");
@@ -2401,7 +2775,17 @@
           if (RARITY[fish.rarity].mult > 2) weight *= (0.72 + state.shopLevel / 120) * weather.rare;
           weighted.push({ fish, weight });
         });
-        return weightedPick(weighted);
+        let fish = weightedPick(weighted);
+        const goldChance = 0.012 + (talismanActive("moon") ? 0.08 : 0);
+        if (fish && Math.random() < goldChance) {
+          fish = { ...fish, golden: true, name: `Золота ${fish.name}`, coins: Math.floor(fish.coins * 5), xp: Math.floor(fish.xp * 2), color: "#f6bc2f", accent: "#fff7ad" };
+        }
+        const miniBossChance = (time === "night" || weather.id === "rain") ? 0.075 + (talismanActive("moon") ? 0.05 : 0) : 0;
+        if (Math.random() < miniBossChance) {
+          const mini = MINI_BOSSES[Math.floor(Math.random() * MINI_BOSSES.length)];
+          return { ...mini, boss: true, miniBoss: true, rarity: "epic", level: state.level, location: state.location };
+        }
+        return fish;
       }
 
       function nextBossCandidate() {
@@ -2503,10 +2887,11 @@
         const index = state.fish.findIndex(item => item.uid === uid);
         if (index < 0) return;
         const [fish] = state.fish.splice(index, 1);
-        state.coins += fish.value;
-        state.stats.coinsEarned += fish.value;
-        state.stats.soldCoins += fish.value;
-        setMessage(`Продано: ${fish.name}. +${fish.value} Coins.`);
+        const value = saleValue(fish);
+        state.coins += value;
+        state.stats.coinsEarned += value;
+        state.stats.soldCoins += value;
+        setMessage(`Продано: ${fish.name}. +${value} Coins.`);
         playSound("coin");
         checkAchievements();
         renderAll();
@@ -2675,6 +3060,35 @@
         return list.filter(Boolean).slice(0, slots);
       }
 
+      function renderHarbor() {
+        if (!els.harborModal.open) return;
+        refreshDailySystems();
+        const upgrade = BOAT_UPGRADES[state.boat.level];
+        const tournamentLeft = Math.max(0, Math.ceil((state.tournament.endsAt - Date.now()) / 60000));
+        els.harborSummary.innerHTML = `
+          <span class="tag">Ринок: x${marketMultiplier().toFixed(2)}</span>
+          <span class="tag">Човен LVL ${state.boat.level} / ${BOAT_UPGRADES.length}</span>
+          <span class="tag">Репутація: ${state.daily.reputation}</span>
+          <span class="tag">Трофеї: ${state.trophies.length}</span>
+        `;
+        const boatCard = `<article class="card"><h3>🚣 Човен</h3><p>${upgrade ? `${upgrade.name}: ${upgrade.desc}` : "Максимально покращений човен."}</p><div class="meta"><span class="tag">Швидкість +${state.boat.level * 25 + (talismanActive("tide") ? 15 : 0)}%</span><span class="tag">Сіті: ${(state.nets || []).length} / ${4 + (state.boat.level >= 2 ? 2 : 0)}</span></div><button data-boat-upgrade ${!upgrade || state.coins < upgrade.cost ? "disabled" : ""}>${upgrade ? `Покращити (${upgrade.cost} Coins)` : "Максимум"}</button></article>`;
+        const talismanCards = Object.values(TALISMANS).map(item => {
+          const owned = state.talismans.includes(item.id);
+          const active = talismanActive(item.id);
+          return `<article class="card ${active ? "done" : ""}"><h3>${item.icon} ${item.name}</h3><p>${item.desc}</p><button data-talisman="${item.id}" ${!owned && state.coins < item.cost ? "disabled" : ""}>${active ? "Зняти" : owned ? "Активувати" : `Купити (${item.cost})`}</button></article>`;
+        }).join("");
+        const tournamentCard = `<article class="card"><h3>🏆 Турнір великої риби</h3><p>${state.tournament.active ? `Час: ${tournamentLeft} хв. Уловів: ${state.tournament.catches}/3. Найбільша: ${state.tournament.bestWeight.toFixed(2)} кг.` : "10 хвилин, щоб спіймати 3 риби. Нагорода залежить від найбільшої."}</p><button data-tournament ${state.tournament.active ? "disabled" : ""}>Почати турнір</button><button data-tournament-claim ${!state.tournament.active || state.tournament.catches < 3 || state.tournament.claimed ? "disabled" : ""}>Забрати нагороду</button></article>`;
+        const npcCard = `<article class="card"><h3>🎣 Рибалка Остап</h3><p>Щоденне замовлення: спіймай 5 риб. Прогрес: ${state.daily.catches}/5.</p><div class="meta"><span class="tag">Нагорода: 280 Coins</span><span class="tag">Репутація ${state.daily.reputation}</span></div><button data-daily-claim ${state.daily.catches < 5 || state.daily.claimed ? "disabled" : ""}>Забрати винагороду</button></article>`;
+        const trophyCard = `<article class="card"><h3>🏠 Колекція трофеїв</h3><p>${state.trophies.length ? state.trophies.slice(-5).map(trophy => escapeHtml(trophy)).join(" · ") : "Золоті риби та мінібоси прикрасять берег."}</p><div class="meta"><span class="tag">Синій колір човна: ${state.cosmetics.includes("blue_boat") ? "відкрито" : "за 3 репутацію"}</span></div>${state.cosmetics.includes("blue_boat") ? `<button data-boat-color>Змінити колір човна</button>` : ""}</article>`;
+        els.harborGrid.innerHTML = boatCard + talismanCards + tournamentCard + npcCard + trophyCard;
+        els.harborGrid.querySelector("[data-boat-upgrade]")?.addEventListener("click", buyBoatUpgrade);
+        els.harborGrid.querySelectorAll("[data-talisman]").forEach(button => button.addEventListener("click", () => buyOrEquipTalisman(button.dataset.talisman)));
+        els.harborGrid.querySelector("[data-tournament]")?.addEventListener("click", startTournament);
+        els.harborGrid.querySelector("[data-tournament-claim]")?.addEventListener("click", claimTournament);
+        els.harborGrid.querySelector("[data-daily-claim]")?.addEventListener("click", claimDailyQuest);
+        els.harborGrid.querySelector("[data-boat-color]")?.addEventListener("click", () => { state.boat.color = state.boat.color === "#4f9bd6" ? "#ba7046" : "#4f9bd6"; renderAll(); saveGame(); });
+      }
+
       function renderAll() {
         renderHud();
         renderHotbar();
@@ -2688,6 +3102,7 @@
         renderAquarium();
         renderAchievements();
         renderSaveTools();
+        renderHarbor();
       }
 
       function renderHud() {
@@ -2757,11 +3172,91 @@
         });
       }
 
+      function sellAllFish() {
+        if (!state.fish || state.fish.length === 0) {
+          toast("В інвентарі немає риби для продажу.");
+          return;
+        }
+        const count = state.fish.length;
+        const total = state.fish.reduce((sum, fish) => sum + saleValue(fish), 0);
+        state.fish = [];
+        state.coins += total;
+        state.stats.coinsEarned += total;
+        state.stats.soldCoins += total;
+        selectedInventoryItem = null;
+        toast(`Продано всю рибу (${count} шт.) за +${total} Coins!`);
+        playSound("coin");
+        checkAchievements();
+        renderAll();
+        saveGame();
+      }
+
+      function updateItemActionBar() {
+        if (!els.selectedItemActions) return;
+        if (!selectedInventoryItem) {
+          els.selectedItemActions.innerHTML = "";
+          return;
+        }
+        const item = selectedInventoryItem;
+        if (item.kind === "fish") {
+          els.selectedItemActions.innerHTML = `
+            <button id="sellSelectedFishBtn" style="background:#59bde3;color:#16131a;padding:6px 10px;">💵 Продати (+${item.qty})</button>
+            <button id="aquariumSelectedFishBtn" style="background:#68c35a;color:#16131a;padding:6px 10px;">🐠 В акваріум</button>
+          `;
+          document.getElementById("sellSelectedFishBtn")?.addEventListener("click", () => {
+            sellFish(item.uid);
+            selectedInventoryItem = null;
+            renderInventory();
+          });
+          document.getElementById("aquariumSelectedFishBtn")?.addEventListener("click", () => {
+            moveFishToAquarium(item.uid);
+            selectedInventoryItem = null;
+            renderInventory();
+          });
+        } else if (item.kind === "enchant") {
+          els.selectedItemActions.innerHTML = `
+            <button id="applySelectedEnchantBtn" style="background:#be85ff;color:#16131a;padding:6px 10px;">✨ Зачарувати вудку</button>
+          `;
+          document.getElementById("applySelectedEnchantBtn")?.addEventListener("click", () => {
+            applyEnchantToRod(item.enchant);
+            selectedInventoryItem = null;
+            renderInventory();
+          });
+        } else if (item.kind === "rod") {
+          els.selectedItemActions.innerHTML = `
+            <button id="selectRodActionBtn" style="background:#ffd560;color:#16131a;padding:6px 10px;">🎣 Взяти вудку</button>
+          `;
+          document.getElementById("selectRodActionBtn")?.addEventListener("click", () => {
+            state.selectedRodId = item.uid;
+            selectedInventoryItem = null;
+            renderAll();
+            saveGame();
+          });
+        } else if (item.kind === "resource" && item.uid === "repair") {
+          els.selectedItemActions.innerHTML = `
+            <button id="useRepairActionBtn" style="background:#df514a;color:#fff;padding:6px 10px;">🔧 Полагодити вудку</button>
+          `;
+          document.getElementById("useRepairActionBtn")?.addEventListener("click", () => {
+            repairSelectedRod(true);
+            selectedInventoryItem = null;
+            renderInventory();
+          });
+        } else {
+          els.selectedItemActions.innerHTML = "";
+        }
+      }
+
       function renderInventory() {
         if (!els.inventoryModal.open && !els.grindstoneModal.open) return;
         const rod = selectedRod();
         const tier = rodTier(rod);
         const stats = rodStats(rod);
+        const totalFishValue = state.fish.reduce((sum, fish) => sum + saleValue(fish), 0);
+        if (els.sellAllFishBtn) {
+          els.sellAllFishBtn.disabled = state.fish.length === 0;
+          els.sellAllFishBtn.textContent = state.fish.length > 0 ? `💰 Продати всю рибу (${totalFishValue} Coins)` : "💰 Немає риби для продажу";
+        }
+        updateItemActionBar();
         els.inventorySummary.innerHTML = `
           <span class="tag">Coins: ${state.coins}</span>
           <span class="tag">Риба: ${state.fish.length}</span>
@@ -2787,11 +3282,12 @@
           slot.addEventListener("dblclick", () => useInventoryItem(JSON.parse(slot.dataset.payload)));
           slot.addEventListener("click", () => {
             const payload = JSON.parse(slot.dataset.payload);
+            selectedInventoryItem = (selectedInventoryItem?.uid === payload.uid) ? null : payload;
             if (payload.kind === "rod") {
               state.selectedRodId = payload.uid;
-              renderAll();
               saveGame();
             }
+            renderInventory();
           });
         });
       }
@@ -2811,7 +3307,7 @@
           kind: "fish",
           uid: item.uid,
           label: item.name,
-          qty: item.value,
+          qty: saleValue(item),
           icon: `<span class="pixel-fish" style="--fish:${item.color};--accent:${item.accent}"></span>`
         }));
         const enchants = state.enchantments.map((id, index) => ({
@@ -2833,8 +3329,9 @@
       }
 
       function inventorySlotHtml(item) {
+        const isSelected = selectedInventoryItem && selectedInventoryItem.uid === item.uid;
         return `
-          <div class="inv-slot" draggable="true" data-payload='${escapeAttr(JSON.stringify(item))}' title="${escapeAttr(item.label)}">
+          <div class="inv-slot ${isSelected ? "selected" : ""}" draggable="true" data-payload='${escapeAttr(JSON.stringify(item))}' title="${escapeAttr(item.label)}">
             <span class="label">${escapeHtml(item.label)}</span>
             ${item.icon}
             <small>${item.qty}</small>
@@ -2894,7 +3391,7 @@
               <div class="meta">
                 <span class="tag">220 Coins</span>
                 <span class="tag">Маєте: ${state.netsOwned || 0} шт.</span>
-                <span class="tag">В воді: ${(state.nets || []).length} / 4</span>
+                <span class="tag">В воді: ${(state.nets || []).length} / ${4 + (state.boat.level >= 2 ? 2 : 0)}</span>
               </div>
               <button id="buyNetBtn" ${state.coins < 220 ? "disabled" : ""}>Купити сіть (220 Coins)</button>
             </article>
@@ -3225,6 +3722,8 @@
         els.aquariumButton.addEventListener("click", () => openModal(els.aquariumModal));
         els.achievementsButton.addEventListener("click", () => openModal(els.achievementsModal));
         els.saveToolsButton.addEventListener("click", () => openModal(els.saveToolsModal));
+        els.harborButton.addEventListener("click", () => openModal(els.harborModal));
+        els.controlsButton.addEventListener("click", () => openModal(els.controlsModal));
         els.saveButton.addEventListener("click", () => saveGame(true));
         els.castButton.addEventListener("click", () => cast());
         els.reelButton.addEventListener("pointerdown", event => {
@@ -3244,9 +3743,34 @@
         els.canvas.addEventListener("pointerdown", event => {
           unlockAudio();
           const point = screenToCanvas(event);
-          if (fishing.phase === "idle") cast(point);
-          else if (fishing.phase === "bite") hookFish();
-          else if (fishing.phase === "reeling") fishing.holding = true;
+          pointer.x = point.x / view.w;
+          pointer.y = point.y / view.h;
+
+          if (fishing.phase === "bite") {
+            hookFish();
+            return;
+          }
+          if (fishing.phase === "reeling") {
+            fishing.holding = true;
+            return;
+          }
+          if (fishing.phase === "idle") {
+            if (canCastAt(point)) {
+              cast(point);
+              return;
+            }
+            const shoreTop = waterRect.y + waterRect.h - 10;
+            if (point.y >= shoreTop) {
+              const normX = point.x / view.w;
+              if (!player.inBoat && Math.abs(normX - boat.x) < 0.12 && player.x >= 0.28) {
+                handleAction();
+                return;
+              }
+              targetPlayerX = clamp(normX, 0.02, 0.55);
+              return;
+            }
+            cast();
+          }
         });
         document.addEventListener("pointerup", () => {
           if (fishing.phase === "reeling") fishing.holding = false;
@@ -3255,8 +3779,8 @@
           // Movement keys — handle first and return so no modal opens
           if (event.code === "KeyA" || event.code === "ArrowLeft")  { keys.left  = true;  return; }
           if (event.code === "KeyD" || event.code === "ArrowRight") { keys.right = true;  return; }
-          if (event.key.toLowerCase() === "e") { handleAction(); return; }
-          if (event.key.toLowerCase() === "n") { placeNet();    return; }
+          if (event.code === "KeyE") { handleAction(); return; }
+          if (event.code === "KeyN") { placeNet();    return; }
 
           if (event.repeat) return;
           if (event.code === "Space") {
@@ -3266,13 +3790,14 @@
             else if (fishing.phase === "bite") hookFish();
             else if (fishing.phase === "reeling") fishing.holding = true;
           }
-          if (event.key.toLowerCase() === "i") openModal(els.inventoryModal);
-          if (event.key.toLowerCase() === "g") openModal(els.grindstoneModal);
-          if (event.key.toLowerCase() === "m") openModal(els.locationModal);
-          if (event.key.toLowerCase() === "q") openModal(els.questModal);
-          if (event.key.toLowerCase() === "f") openModal(els.dexModal);
-          if (event.key.toLowerCase() === "c") openModal(els.craftModal);
-          if (event.key.toLowerCase() === "u") openModal(els.aquariumModal);
+          if (event.code === "KeyI") openModal(els.inventoryModal);
+          if (event.code === "KeyG") openModal(els.grindstoneModal);
+          if (event.code === "KeyM") openModal(els.locationModal);
+          if (event.code === "KeyQ") openModal(els.questModal);
+          if (event.code === "KeyF") openModal(els.dexModal);
+          if (event.code === "KeyC") openModal(els.craftModal);
+          if (event.code === "KeyU") openModal(els.aquariumModal);
+          if (event.code === "KeyS") saveGame(true);
         });
         document.addEventListener("keyup", event => {
           if (event.code === "KeyA" || event.code === "ArrowLeft")  keys.left  = false;
@@ -3318,6 +3843,41 @@
         els.collectAquariumButton.addEventListener("click", collectAquariumIncome);
         els.exportSaveButton.addEventListener("click", exportSave);
         els.importSaveButton.addEventListener("click", importSave);
+        if (els.sellAllFishBtn) els.sellAllFishBtn.addEventListener("click", sellAllFish);
+        if (els.fullscreenButton) {
+          els.fullscreenButton.addEventListener("click", () => {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen?.().catch(() => {});
+            } else {
+              document.exitFullscreen?.().catch(() => {});
+            }
+          });
+        }
+        document.addEventListener("fullscreenchange", () => {
+          if (els.fullscreenButton) {
+            els.fullscreenButton.textContent = document.fullscreenElement ? "✕⛶" : "⛶";
+          }
+          resizeCanvas();
+        });
+        window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 120));
+        screen.orientation?.addEventListener("change", () => setTimeout(resizeCanvas, 120));
+
+        // Tap on modal backdrop to close
+        document.querySelectorAll("dialog").forEach(dialog => {
+          dialog.addEventListener("click", event => {
+            const rect = dialog.getBoundingClientRect();
+            const isInDialog = (
+              rect.top <= event.clientY &&
+              event.clientY <= rect.top + rect.height &&
+              rect.left <= event.clientX &&
+              event.clientX <= rect.left + rect.width
+            );
+            if (!isInDialog) {
+              dialog.close();
+            }
+          });
+        });
+
         setupDropZones();
       }
 
@@ -3342,12 +3902,13 @@
         updateWorld(dt);
         updateFishing(now, dt);
         updatePlayerMovement(dt);
-        updateNets(now);
+        updateNets(Date.now());
         drawScene(now, dt);
         renderHud();
         if (els.aquariumModal.open) renderAquarium();
         if (els.questModal.open) renderQuests();
         if (els.achievementsModal.open) renderAchievements();
+        if (els.harborModal.open) renderHarbor();
         if (autosaveClock > 6) {
           autosaveClock = 0;
           saveGame(false);
@@ -3357,23 +3918,40 @@
 
       // === PLAYER MOVEMENT ===
       function updatePlayerMovement(dt) {
-        const speed = 0.28 * dt;
+        const boatSpeed = 1 + state.boat.level * 0.25 + (talismanActive("tide") ? 0.15 : 0);
+        const speed = (player.inBoat ? 0.34 * boatSpeed : 0.28) * dt;
+        if (keys.left || keys.right) {
+          targetPlayerX = null;
+        }
         if (player.inBoat) {
           if (keys.left)  { boat.x = Math.max(0.38, boat.x - speed); player.facing = "left"; }
           if (keys.right) { boat.x = Math.min(0.97, boat.x + speed); player.facing = "right"; }
         } else {
           if (keys.left)  { player.x = Math.max(0.02, player.x - speed); player.facing = "left"; }
           if (keys.right) { player.x = Math.min(0.55, player.x + speed); player.facing = "right"; }
+          if (targetPlayerX !== null && !keys.left && !keys.right) {
+            const diff = targetPlayerX - player.x;
+            if (Math.abs(diff) <= speed) {
+              player.x = targetPlayerX;
+              targetPlayerX = null;
+            } else if (diff < 0) {
+              player.x = Math.max(0.02, player.x - speed);
+              player.facing = "left";
+            } else {
+              player.x = Math.min(0.55, player.x + speed);
+              player.facing = "right";
+            }
+          }
         }
       }
 
       // === BOARD / EXIT BOAT / HARVEST NET ===
       function handleAction() {
         const cx = player.inBoat ? boat.x : player.x;
-        // Harvest nearby net first
+        // A nearby net only takes priority when there is actually something to collect.
         if (state.nets && state.nets.length) {
           const ni = state.nets.findIndex(n => Math.abs(n.x - cx) < 0.1);
-          if (ni >= 0) {
+          if (ni >= 0 && state.nets[ni].caught?.length > 0) {
             harvestNet(ni);
             return;
           }
@@ -3384,21 +3962,20 @@
           player.x = Math.min(0.50, boat.x - 0.04);
           setMessage("Ви вийшли з човна.");
         } else {
-          if (player.x >= 0.30) {
-            player.inBoat = true;
-            boat.x = Math.max(boat.x, 0.44);
-            setMessage("Ви сіли в човен! Плавайте A/D. Натисніть E щоб вийти.");
-          } else {
-            setMessage("Підійдіть до пірсу (праворуч, клавіша D) та натисніть E.");
-          }
+          targetPlayerX = null;
+          player.inBoat = true;
+          boat.x = Math.max(boat.x, 0.44);
+          setMessage("Ви сіли в човен! Плавайте A/D. Натисніть E або «Дія», щоб вийти.");
         }
       }
 
       // === PLACE NET ===
       function placeNet() {
-        if (!state.netsOwned || state.netsOwned <= 0) state.netsOwned = 2;
+        if (!Number.isFinite(state.netsOwned)) state.netsOwned = 2;
+        if (state.netsOwned <= 0) { setMessage("Немає сітей. Купіть нову в магазині."); return; }
         if (!state.nets) state.nets = [];
-        if (state.nets.length >= 4) { setMessage("Максимум 4 сітки."); return; }
+        const netLimit = 4 + (state.boat.level >= 2 ? 2 : 0);
+        if (state.nets.length >= netLimit) { setMessage(`Максимум ${netLimit} сітей.`); return; }
         const posX = player.inBoat ? boat.x : Math.max(0.38, player.x);
         state.netsOwned -= 1;
         state.nets.push({ id: Date.now(), x: posX, caught: [], maxCapacity: 5, lastCatch: Date.now() });
@@ -3416,11 +3993,16 @@
             uid: `net-${Date.now()}-${Math.random().toString(36).slice(2)}`,
             id: fish.id, name: fish.name, rarity: fish.rarity,
             weight: Number(fish.weight.toFixed(2)), value: fish.value,
-            boss: false, location: state.location, weather: state.weather,
+            boss: false, golden: !!fish.golden, location: state.location, weather: state.weather,
             time: currentTimeSegment().id, caughtAt: Date.now(),
             color: fish.color, accent: fish.accent
           });
           state.stats.totalCaught += 1;
+          state.daily.catches += 1;
+          if (fish.golden) {
+            state.resources.crystal += 2;
+            state.trophies.push(`Золотий трофей: ${fish.name}`);
+          }
           recordCatch(fish, { rarity: fish.rarity, weight: fish.weight, value: fish.value, location: state.location });
         });
         net.caught = [];
@@ -3434,13 +4016,14 @@
         if (!state.nets || !state.nets.length) return;
         state.nets.forEach(net => {
           if (net.caught.length >= net.maxCapacity) return;
+          if (!Number.isFinite(net.lastCatch) || net.lastCatch < 1000000000000) net.lastCatch = now - 18000;
           if (now - net.lastCatch < 18000) return;
           net.lastCatch = now;
           const fish = spawnFish();
-          if (!fish) return;
+          if (!fish || fish.boss) return;
           const weight = rand(fish.min, fish.max);
           net.caught.push({ id: fish.id, name: fish.name, rarity: fish.rarity,
-            weight, value: Math.floor(fish.coins + weight * 6),
+            weight, value: Math.floor(fish.coins + weight * 6), golden: !!fish.golden,
             color: fish.color, accent: fish.accent });
           toast(`🕸 Сіть спіймала: ${fish.name}!`);
         });
@@ -3614,8 +4197,6 @@
           rect(x, gy, 5, 25 + (i % 3) * 9, loc.id === "lava" ? "#93533f" : i % 2 ? "#2f6d2d" : "#438d35");
           rect(x - 5, gy + 8, 5, 8, loc.id === "lava" ? "#5a342d" : "#255827");
         }
-        // Distant background cabin
-        drawCabin(w * 0.83, waterRect.y - 10, 68);
       }
 
       function drawPier(w, h) {
@@ -3634,12 +4215,16 @@
         if (!player.inBoat && player.x >= 0.28) {
           const bx = Math.round(boat.x * w);
           const by = waterRect.y + waterRect.h * 0.28;
-          rect(bx - 64, by - 22, 128, 20, "#1e441a");
+          const dpr = view.dpr || 1;
+          const bw = Math.round(140 * dpr);
+          const bh = Math.round(22 * dpr);
+          const fontPx = Math.max(12, Math.round(13 * dpr));
+          rect(bx - bw / 2, by - bh, bw, bh, "#1e441a");
           ctx.save();
-          ctx.font = "bold 13px Consolas, monospace";
+          ctx.font = `bold ${fontPx}px Consolas, monospace`;
           ctx.textAlign = "center";
           ctx.fillStyle = "#9fff85";
-          ctx.fillText("🚣 E — Сісти в човен", bx, by - 8);
+          ctx.fillText("🚣 E — Сісти в човен", bx, by - Math.round(bh * 0.32));
           ctx.restore();
         }
       }
@@ -3670,18 +4255,20 @@
           ctx.restore();
           // Count label
           const count = net.caught ? net.caught.length : 0;
+          const dpr = view.dpr || 1;
+          const fontPx = Math.max(11, Math.round(12 * dpr));
           ctx.save();
-          ctx.font = "bold 12px Consolas, monospace";
+          ctx.font = `bold ${fontPx}px Consolas, monospace`;
           ctx.textAlign = "center";
-          rect(nx - 20, ny + bob + 28, 40, 16, "#16131a");
+          rect(nx - 24 * dpr, ny + bob + 26 * dpr, 48 * dpr, 18 * dpr, "#16131a");
           ctx.fillStyle = count > 0 ? "#ffd560" : "#c0c0c0";
-          ctx.fillText(`🕸${count}/${net.maxCapacity}`, nx, ny + bob + 40);
+          ctx.fillText(`🕸${count}/${net.maxCapacity}`, nx, ny + bob + 39 * dpr);
           // Nearby harvest hint
           const cx = player.inBoat ? boat.x : player.x;
           if (Math.abs(net.x - cx) < 0.1) {
-            rect(nx - 48, ny + bob - 28, 96, 18, "#2c5c1e");
+            rect(nx - 54 * dpr, ny + bob - 30 * dpr, 108 * dpr, 20 * dpr, "#2c5c1e");
             ctx.fillStyle = "#9fff85";
-            ctx.fillText("E — Зібрати улов", nx, ny + bob - 15);
+            ctx.fillText("E — Зібрати улов", nx, ny + bob - 15 * dpr);
           }
           ctx.restore();
         });
@@ -3690,11 +4277,11 @@
       function drawBoatSprite(w, h, now) {
         const bx = Math.round(boat.x * w);
         const by = Math.round(waterRect.y + waterRect.h * 0.35);
-        const s  = Math.round(w / 95);
+        const s = Math.round(view.unit * 1.3);
         // Boat hull shadow
         rect(bx - 9 * s, by + 4 * s, 18 * s, 3 * s, "#16131a");
         // Boat body
-        rect(bx - 8 * s, by,         16 * s, 4 * s, "#ba7046");
+        rect(bx - 8 * s, by,         16 * s, 4 * s, state.boat.color || "#ba7046");
         rect(bx - 6 * s, by + 3 * s, 12 * s, 3 * s, "#774333");
         // Inner plank
         rect(bx - 4 * s, by + 1 * s,  8 * s, 2 * s, "#a05a30");
@@ -3702,22 +4289,24 @@
         rect(bx + 5 * s, by - 3 * s,  2 * s, 8 * s, "#6d3f2a");
         // Player IN boat
         if (player.inBoat) {
-          rect(bx - 2 * s, by - 7 * s,  6 * s, 7 * s, "#c98048");
+          rect(bx - 2 * s, by - 7 * s,  6 * s, 7 * s, state.cosmetics.includes("explorer_coat") ? "#6857ae" : "#c98048");
           rect(bx - 2 * s, by - 11 * s, 5 * s, 5 * s, "#26384a");
           rect(bx - 1 * s, by - 9  * s, 4 * s, 3 * s, "#f0b27a");
           // tiny rod
           const castLift = (fishing.phase === "waiting" || fishing.phase === "bite" || fishing.phase === "reeling") ? -s * 3 : 0;
-          rect(bx + 3 * s, by - 8  * s, s, 10 * s + castLift, "#4c2f20");
+          rect(bx + 3 * s, by - 8  * s, s, 10 * s + castLift, state.cosmetics.includes("river_rod") ? "#4f9bd6" : "#4c2f20");
+          player.rodTip = { x: bx + 3 * s + (player.facing === "left" ? -1 : 1) * s * 12, y: by - 8 * s + castLift };
         }
       }
 
       function drawPlayerSprite(w, h, now) {
         if (player.inBoat) return; // player drawn inside boat already
         const px = Math.round(player.x * w);
-        const py = waterRect.y + waterRect.h + h * 0.13;
-        const s  = w / 185;
+        const s = view.unit;
+        const groundY = waterRect.y + waterRect.h;
+        const py = Math.min(h - 4 * s, groundY + Math.min(h * 0.12, 10 * s));
         const bob = Math.sin(now / 420) * s * 0.16;
-        const isWalking = keys.left || keys.right;
+        const isWalking = keys.left || keys.right || (targetPlayerX !== null);
         const legAnim = isWalking ? Math.sin(now / 120) * s * 0.8 : 0;
         // Head
         outlineRect(px - 1.1 * s, py - 8.5 * s + bob, 2.2 * s, 2.4 * s, "#d69b6f", "#16131a", 3);
@@ -3725,7 +4314,7 @@
         rect(px - 0.55 * s, py - 7.55 * s + bob, 0.35 * s, 0.35 * s, "#111");
         rect(px + 0.45 * s, py - 7.55 * s + bob, 0.35 * s, 0.35 * s, "#111");
         // Body
-        outlineRect(px - 1.25 * s, py - 5.95 * s + bob, 2.5 * s, 3.6 * s, "#356a9a", "#16131a", 3);
+        outlineRect(px - 1.25 * s, py - 5.95 * s + bob, 2.5 * s, 3.6 * s, state.cosmetics.includes("explorer_coat") ? "#6857ae" : "#356a9a", "#16131a", 3);
         // Arms
         rect(px - 2.0 * s, py - 5.6 * s + bob, 0.8 * s, 2.9 * s, "#d69b6f");
         rect(px + 1.2 * s, py - 5.6 * s + bob, 0.8 * s, 2.9 * s, "#d69b6f");
@@ -3737,8 +4326,15 @@
         rect(px + 0.25 * s - legAnim, py + 0.75 * s, 1.45 * s, 0.55 * s, "#1d1d24");
         // Rod
         const rodDir = player.facing === "left" ? -1 : 1;
-        const rodX2 = player.inBoat ? px + rodDir * w * 0.18 : w * 0.68;
-        drawRod(px + 1.8 * s * rodDir, py - 5.2 * s + bob, rodX2, waterRect.y + waterRect.h * 0.05, rodTier().color);
+        const rodX1 = px + 1.8 * s * rodDir;
+        const rodY1 = py - 5.2 * s + bob;
+        const isCasting = (fishing.phase === "waiting" || fishing.phase === "bite" || fishing.phase === "reeling");
+        const rodLength = s * 8.5;
+        const rodAngle = rodDir > 0 ? (isCasting ? -0.42 : -0.76) : (isCasting ? -Math.PI + 0.42 : -Math.PI + 0.76);
+        const rodX2 = rodX1 + Math.cos(rodAngle) * rodLength;
+        const rodY2 = rodY1 + Math.sin(rodAngle) * rodLength;
+        player.rodTip = { x: rodX2, y: rodY2 };
+        drawRod(rodX1, rodY1, rodX2, rodY2, state.cosmetics.includes("river_rod") ? "#4f9bd6" : rodTier().color);
       }
 
       function drawLavaVent(x, y, now) {
@@ -3786,7 +4382,7 @@
 
       function drawLineAndBobber(w, h, now) {
         if (!fishing.cast) return;
-        const start = { x: w * 0.68, y: waterRect.y + waterRect.h * 0.05 };
+        const start = player.rodTip || { x: w * 0.68, y: waterRect.y + waterRect.h * 0.08 };
         const bobY = fishing.cast.y + Math.sin(now / 210) * (fishing.phase === "bite" ? 10 : 3);
         line(start.x, start.y, fishing.cast.x, bobY, "rgba(245,248,255,0.85)", 2);
         line(fishing.cast.x, bobY, fishing.cast.x + Math.sin(now / 460) * 8, bobY + 54, "rgba(245,248,255,0.7)", 2);
@@ -3979,6 +4575,9 @@
       checkAchievements();
       renderAll();
       updateHint("Готово до закидання");
+      if (location.hash === "#inventory") openModal(els.inventoryModal);
+      else if (location.hash === "#shop") openModal(els.shopModal);
+      else if (location.hash === "#dex") openModal(els.dexModal);
       requestAnimationFrame(loop);
     })();
   </script>
