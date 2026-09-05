@@ -1,0 +1,5 @@
+2026/09/05-13:41:28.831 2560 Log #3: 1 ops saved to Table #4 OK
+2026/09/05-13:41:28.836 2560 Archiving c:\Users\Karma\Documents\GitHub\fishing\scratch\edge_temp\Default\Site Characteristics Database/000003.log: OK
+2026/09/05-13:41:28.836 2560 Table #4: 1 entries OK
+2026/09/05-13:41:28.839 2560 Archiving c:\Users\Karma\Documents\GitHub\fishing\scratch\edge_temp\Default\Site Characteristics Database/MANIFEST-000001: OK
+2026/09/05-13:41:28.845 2560 **** Repaired leveldb c:\Users\Karma\Documents\GitHub\fishing\scratch\edge_temp\Default\Site Characteristics Database; recovered 1 files; 130 bytes. Some data may have been lost. ****

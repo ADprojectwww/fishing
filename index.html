@@ -1331,6 +1331,7 @@
           <span class="world-badge" id="locationBadge">Лісове озеро</span>
           <span class="world-badge" id="weatherBadge">Сонячно</span>
           <span class="world-badge" id="timeBadge">День</span>
+          <span class="world-badge" id="talismanBadge" style="cursor:pointer" title="Активний талісман (натисніть, щоб відкрити магазин)">Без талісмана</span>
         </div>
         <div class="hud-tools" id="hudTools">
           <button class="icon-btn" id="inventoryButton" title="Інвентар [I]" aria-label="Інвентар">🎒</button>
@@ -1418,6 +1419,7 @@
     </div>
     <div class="menu-tabs" id="shopTabs">
       <button data-tab="rods" class="active">Вудочки</button>
+      <button data-tab="talismans">Талісмани</button>
       <button data-tab="nets">Сіті</button>
       <button data-tab="enchants">Зачарування</button>
       <button data-tab="upgrades">Покращення</button>
@@ -1831,9 +1833,13 @@
       ];
 
       const TALISMANS = {
-        sun: { id: "sun", name: "Сонячний талісман", cost: 700, desc: "+12% до вартості продажу.", icon: "☀" },
+        sun: { id: "sun", name: "Сонячний талісман", cost: 700, desc: "+15% до вартості продажу риби.", icon: "☀" },
         moon: { id: "moon", name: "Місячний талісман", cost: 850, desc: "+8% шансів на золоту рибу та мінібосів.", icon: "☾" },
-        tide: { id: "tide", name: "Талісман припливу", cost: 650, desc: "+15% швидкості човна.", icon: "≈" }
+        tide: { id: "tide", name: "Талісман припливу", cost: 650, desc: "+15% швидкості човна.", icon: "≈" },
+        luck: { id: "luck", name: "Талісман удачі", cost: 800, desc: "+35% шансів на рідкісну, епічну та легендарну рибу.", icon: "🍀" },
+        storm: { id: "storm", name: "Грозовий талісман", cost: 750, desc: "+25% до швидкості кльову риби.", icon: "⚡" },
+        abyss: { id: "abyss", name: "Талісман безодні", cost: 950, desc: "+25% сили вудки проти важкої риби та босів.", icon: "🔱" },
+        wealth: { id: "wealth", name: "Талісман достатку", cost: 900, desc: "+25% додаткового досвіду (XP) при вилові.", icon: "🪙" }
       };
 
       const BOAT_UPGRADES = [
@@ -1961,6 +1967,7 @@
         locationBadge: document.getElementById("locationBadge"),
         weatherBadge: document.getElementById("weatherBadge"),
         timeBadge: document.getElementById("timeBadge"),
+        talismanBadge: document.getElementById("talismanBadge"),
         rodName: document.getElementById("rodName"),
         rodDurabilityFill: document.getElementById("rodDurabilityFill"),
         rodDurabilityText: document.getElementById("rodDurabilityText"),
@@ -2200,7 +2207,7 @@
       }
 
       function saleValue(fish) {
-        const talismanBonus = talismanActive("sun") ? 1.12 : 1;
+        const talismanBonus = talismanActive("sun") ? 1.15 : 1;
         return Math.max(1, Math.floor(fish.value * marketMultiplier() * talismanBonus));
       }
 
@@ -2228,12 +2235,23 @@
         const talisman = TALISMANS[id];
         if (!talisman) return;
         if (!state.talismans.includes(id)) {
-          if (state.coins < talisman.cost) return;
+          if (state.coins < talisman.cost) {
+            toast(`Недостатньо монет! Потрібно ${talisman.cost} Coins.`);
+            return;
+          }
           state.coins -= talisman.cost;
           state.talismans.push(id);
+          state.equippedTalisman = id;
+          toast(`Куплено та активовано: ${talisman.name}!`);
+          setMessage(`Куплено та активовано: ${talisman.name}.`);
+          playSound("coin");
+        } else {
+          state.equippedTalisman = state.equippedTalisman === id ? null : id;
+          const msg = state.equippedTalisman === id ? `Активовано: ${talisman.name}.` : `Знято талісман ${talisman.name}.`;
+          toast(msg);
+          setMessage(msg);
+          playSound("click");
         }
-        state.equippedTalisman = state.equippedTalisman === id ? null : id;
-        setMessage(state.equippedTalisman ? `Активовано: ${talisman.name}.` : "Талісман знято.");
         renderAll();
         saveGame();
       }
@@ -2494,11 +2512,11 @@
         const ench = enchantCounts(rod);
         return {
           name: `${tier.name} +${rod.level - 1}`,
-          power: tier.power * levelBonus * (1 + ench.strength * 0.18),
+          power: tier.power * levelBonus * (1 + ench.strength * 0.18) * (talismanActive("abyss") ? 1.25 : 1),
           speed: tier.speed * levelBonus * (1 + ench.strength * 0.12),
           durabilityLoss: 1 / (1 + ench.titan * 0.35),
           steady: 1 + ench.steady * 0.22,
-          luck: 1 + ench.luck * 0.32,
+          luck: (1 + ench.luck * 0.32) * (talismanActive("luck") ? 1.35 : 1),
           wealth: 1 + ench.wealth * 0.30,
           slots: tier.slots,
           color: tier.color
@@ -2522,7 +2540,7 @@
           state.xp = 0;
           return;
         }
-        state.xp += Math.floor(amount);
+        state.xp += Math.floor(amount * (talismanActive("wealth") ? 1.25 : 1));
         while (state.level < MAX_LEVEL && state.xp >= xpNeeded()) {
           state.xp -= xpNeeded();
           state.level += 1;
@@ -2629,7 +2647,7 @@
         fishing.holding = false;
         fishing.fish = null;
         const stats = rodStats();
-        const wait = rand(1300, 4200) / (stats.luck * currentWeather().bite);
+        const wait = rand(1300, 4200) / (stats.luck * currentWeather().bite * (talismanActive("storm") ? 1.25 : 1));
         fishing.biteAt = performance.now() + wait;
         fishing.ripples.push({ x: target.x, y: target.y, r: 10, life: 1 });
         setMessage(`${currentLocation().name}: поплавок тихо гойдається на хвилях.`);
@@ -2772,7 +2790,7 @@
           weight *= 1 + Math.min(1.7, state.level / 70);
           if (fish.times && !fish.times.includes(time)) weight *= 0.38;
           if (fish.weather && !fish.weather.includes(weather.id)) weight *= 0.55;
-          if (RARITY[fish.rarity].mult > 2) weight *= (0.72 + state.shopLevel / 120) * weather.rare;
+          if (RARITY[fish.rarity].mult > 2) weight *= (0.72 + state.shopLevel / 120) * weather.rare * (talismanActive("luck") ? 1.35 : 1);
           weighted.push({ fish, weight });
         });
         let fish = weightedPick(weighted);
@@ -3075,7 +3093,7 @@
         const talismanCards = Object.values(TALISMANS).map(item => {
           const owned = state.talismans.includes(item.id);
           const active = talismanActive(item.id);
-          return `<article class="card ${active ? "done" : ""}"><h3>${item.icon} ${item.name}</h3><p>${item.desc}</p><button data-talisman="${item.id}" ${!owned && state.coins < item.cost ? "disabled" : ""}>${active ? "Зняти" : owned ? "Активувати" : `Купити (${item.cost})`}</button></article>`;
+          return `<article class="card ${active ? "done" : ""}"><h3>${item.icon} ${item.name}</h3><p>${item.desc}</p><div class="meta"><span class="tag">${item.cost} Coins</span>${active ? '<span class="tag" style="background:var(--gold);color:var(--ink);font-weight:bold;">✓ Вдягнено</span>' : owned ? '<span class="tag" style="background:var(--green);color:var(--ink);">Куплено</span>' : '<span class="tag">У продажу</span>'}</div><button data-talisman="${item.id}" ${!owned && state.coins < item.cost ? "disabled" : ""}>${active ? "Зняти талісман" : owned ? "Активувати" : `Купити (${item.cost})`}</button></article>`;
         }).join("");
         const tournamentCard = `<article class="card"><h3>🏆 Турнір великої риби</h3><p>${state.tournament.active ? `Час: ${tournamentLeft} хв. Уловів: ${state.tournament.catches}/3. Найбільша: ${state.tournament.bestWeight.toFixed(2)} кг.` : "10 хвилин, щоб спіймати 3 риби. Нагорода залежить від найбільшої."}</p><button data-tournament ${state.tournament.active ? "disabled" : ""}>Почати турнір</button><button data-tournament-claim ${!state.tournament.active || state.tournament.catches < 3 || state.tournament.claimed ? "disabled" : ""}>Забрати нагороду</button></article>`;
         const npcCard = `<article class="card"><h3>🎣 Рибалка Остап</h3><p>Щоденне замовлення: спіймай 5 риб. Прогрес: ${state.daily.catches}/5.</p><div class="meta"><span class="tag">Нагорода: 280 Coins</span><span class="tag">Репутація ${state.daily.reputation}</span></div><button data-daily-claim ${state.daily.catches < 5 || state.daily.claimed ? "disabled" : ""}>Забрати винагороду</button></article>`;
@@ -3116,6 +3134,20 @@
         els.locationBadge.textContent = currentLocation().name;
         els.weatherBadge.textContent = currentWeather().name;
         els.timeBadge.textContent = currentTimeSegment().name;
+        if (els.talismanBadge) {
+          if (state.equippedTalisman && TALISMANS[state.equippedTalisman]) {
+            const tal = TALISMANS[state.equippedTalisman];
+            els.talismanBadge.textContent = `${tal.icon} ${tal.name}`;
+            els.talismanBadge.title = `Активний талісман: ${tal.name} (${tal.desc}) — натисніть, щоб відкрити магазин`;
+            els.talismanBadge.style.borderColor = "var(--gold)";
+            els.talismanBadge.style.color = "var(--gold)";
+          } else {
+            els.talismanBadge.textContent = "Без талісмана";
+            els.talismanBadge.title = "Талісман не активовано — натисніть, щоб відкрити магазин";
+            els.talismanBadge.style.borderColor = "";
+            els.talismanBadge.style.color = "";
+          }
+        }
         const need = xpNeeded();
         els.xpFill.style.width = `${state.level >= MAX_LEVEL ? 100 : clamp((state.xp / need) * 100, 0, 100)}%`;
         els.xpText.textContent = state.level >= MAX_LEVEL ? "MAX LVL" : `${state.xp} / ${need} XP`;
@@ -3241,6 +3273,19 @@
             selectedInventoryItem = null;
             renderInventory();
           });
+        } else if (item.kind === "talisman") {
+          const isActive = state.equippedTalisman === item.talismanId;
+          const tal = TALISMANS[item.talismanId];
+          els.selectedItemActions.innerHTML = `
+            <button id="toggleSelectedTalismanBtn" style="background:${isActive ? '#df514a' : '#ffd560'};color:#16131a;padding:6px 10px;font-weight:bold;">
+              ${isActive ? `Зняти ${tal?.name || "талісман"}` : `Активувати ${tal?.name || "талісман"}`}
+            </button>
+          `;
+          document.getElementById("toggleSelectedTalismanBtn")?.addEventListener("click", () => {
+            buyOrEquipTalisman(item.talismanId);
+            selectedInventoryItem = null;
+            renderInventory();
+          });
         } else {
           els.selectedItemActions.innerHTML = "";
         }
@@ -3263,6 +3308,7 @@
           <span class="tag">Вудочки: ${state.rods.length}</span>
           <span class="tag">Чари: ${state.enchantments.length}</span>
           <span class="tag">Ремонт: ${state.resources.repair}</span>
+          <span class="tag" style="${state.equippedTalisman ? 'border-color:var(--gold);color:var(--gold);' : ''}">Талісман: ${state.equippedTalisman && TALISMANS[state.equippedTalisman] ? `${TALISMANS[state.equippedTalisman].icon} ${TALISMANS[state.equippedTalisman].name}` : 'немає'}</span>
         `;
         els.selectedRodDetails.innerHTML = `
           <strong style="color:${tier.color}">${escapeHtml(tier.name)}</strong><br>
@@ -3303,6 +3349,19 @@
             icon: `<span class="pixel-rod" style="--rod-color:${tier.color}"></span>`
           };
         });
+        const talismans = (state.talismans || []).map(id => {
+          const item = TALISMANS[id];
+          if (!item) return null;
+          const isActive = state.equippedTalisman === id;
+          return {
+            kind: "talisman",
+            uid: `talisman-${id}`,
+            talismanId: id,
+            label: `${item.icon} ${item.name}`,
+            qty: isActive ? "АКТИВ" : "ВКЛ",
+            icon: `<span style="font-size:22px;display:inline-block;line-height:1">${item.icon}</span>`
+          };
+        }).filter(Boolean);
         const fish = state.fish.map(item => ({
           kind: "fish",
           uid: item.uid,
@@ -3325,7 +3384,7 @@
           qty,
           icon: id === "repair" ? `<span class="pixel-kit"></span>` : `<span class="pixel-resource"></span>`
         }));
-        return [...rods, ...enchants, ...resources, ...fish];
+        return [...rods, ...talismans, ...enchants, ...resources, ...fish];
       }
 
       function inventorySlotHtml(item) {
@@ -3371,6 +3430,10 @@
           state.selectedRodId = payload.uid;
           setMessage("Вудочку вибрано.");
         }
+        if (payload.kind === "talisman") {
+          buyOrEquipTalisman(payload.talismanId);
+          return;
+        }
         if (payload.kind === "enchant") applyEnchantToRod(payload.enchant);
         if (payload.kind === "fish") moveFishToAquarium(payload.uid);
         if (payload.kind === "resource" && payload.uid === "repair") repairSelectedRod(true);
@@ -3405,6 +3468,29 @@
             setMessage(`Куплено сіть! Маєте ${state.netsOwned} шт. Натисніть N щоб поставити.`);
             renderAll();
             saveGame(false);
+          });
+          return;
+        }
+        if (activeShopTab === "talismans") {
+          els.shopGrid.innerHTML = Object.values(TALISMANS).map(item => {
+            const owned = state.talismans.includes(item.id);
+            const active = talismanActive(item.id);
+            return `
+              <article class="card ${active ? "done" : ""}">
+                <h3><span style="font-size:1.3em">${item.icon}</span> ${escapeHtml(item.name)}</h3>
+                <p>${escapeHtml(item.desc)}</p>
+                <div class="meta">
+                  <span class="tag">${item.cost} Coins</span>
+                  ${active ? '<span class="tag" style="background:var(--gold);color:var(--ink);font-weight:bold;">✓ Вдягнено</span>' : owned ? '<span class="tag" style="background:var(--green);color:var(--ink);">Куплено</span>' : '<span class="tag">У продажу</span>'}
+                </div>
+                <button data-buy-talisman="${item.id}" ${!owned && state.coins < item.cost ? "disabled" : ""}>
+                  ${active ? "Зняти талісман" : owned ? "Активувати" : `Купити (${item.cost} Coins)`}
+                </button>
+              </article>
+            `;
+          }).join("");
+          els.shopGrid.querySelectorAll("[data-buy-talisman]").forEach(btn => {
+            btn.addEventListener("click", () => buyOrEquipTalisman(btn.dataset.buyTalisman));
           });
           return;
         }
@@ -3714,6 +3800,10 @@
         });
         els.inventoryButton.addEventListener("click", () => openModal(els.inventoryModal));
         els.shopButton.addEventListener("click", () => openModal(els.shopModal));
+        els.talismanBadge?.addEventListener("click", () => {
+          activeShopTab = "talismans";
+          openModal(els.shopModal);
+        });
         els.grindstoneButton.addEventListener("click", () => openModal(els.grindstoneModal));
         els.locationButton.addEventListener("click", () => openModal(els.locationModal));
         els.dexButton.addEventListener("click", () => openModal(els.dexModal));
